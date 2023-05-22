@@ -1,0 +1,18 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+numpy = "==1.21"
+recordtype = "*"
+wandb = "==0.14"
+protobuf = "==3.18"
+mujoco-py = "==2.1.2.14"
+matplotlib = "==3.5.3"
+torchdiffeq-ctrl = {ref = "euler", git = "https://github.com/Daniellayeghi/torchdiffeq_ctrl.git"}
+
+[dev-packages]
+
+[requires]
+python_version = "3.7"

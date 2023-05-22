@@ -20,7 +20,6 @@ def bisection_search(func, criteria, lower_bound, upper_bound, max_iterations=7)
 
         iteration += 1
 
-    print(f"bisection iteration {iteration}")
     return lower_bound, update
 
 

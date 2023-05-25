@@ -197,14 +197,26 @@ class Cartpole(BaseRBD):
         return qd * self.FRICTION
 
     def __call__(self, x, tau):
-        q, qd = x[:, :, :self._params.nq].clone(), x[:, :, self._params.nq:].clone()
-        Minv = torch.linalg.inv(self._Mfull(q))
-        Tp = self._Tbias(x)
-        Tfric = self._Tfric(qd)
-        B = self._Bvec()
-        qdd = (Minv @ (Tp - Tfric + tau).mT).mT
-        xd = torch.cat((qd[:, :, 0:self._params.nx], qdd), 2).clone()
-        return xd
+        if self._mode == 'fwd':
+            q, qd = x[:, :, :self._params.nq].clone(), x[:, :, self._params.nq:].clone()
+            Minv = torch.linalg.inv(self._Mfull(q))
+            Tp = self._Tbias(x)
+            Tfric = self._Tfric(qd)
+            B = self._Bvec()
+            qdd = (Minv @ (Tp - Tfric + tau).mT).mT
+            xd = torch.cat((qd[:, :, 0:self._params.nx], qdd), 2).clone()
+            return xd
+        else:
+            q, qd = x[:, :, :self._params.nq].clone(), x[:, :, self._params.nq:].clone()
+            M = self._Mfull(q)
+            M_21, M_22 = M[:, 1, 0].unsqueeze(1).clone(), M[:, 1, 1].unsqueeze(1).clone()
+            Tp = (self._Tgrav(q) - (self._Cfull(x) @ qd.mT).mT)[:, :, 1].clone()
+            Tfric = self._Tfric(qd)[:, :, 1].clone()
+            qddc = tau[:, :, 0].clone()
+            qddp = 1 / M_22 * (Tp - Tfric - M_21 * qddc)
+            xd = torch.cat((qd[:, :, 0], qd[:, :, 1], qddc, qddp), 1).unsqueeze(1).clone()
+            return xd
+
 
     def REG(self, x, tau):
         q, qd = x[:, :, :self._params.nq].clone(), x[:, :, self._params.nq:].clone()

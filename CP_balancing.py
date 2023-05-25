@@ -19,12 +19,12 @@ wandb.init(project='CP_balancing', anonymous="allow")
 
 sim_params = SimulationParams(6, 4, 2, 2, 2, 1, 100, 100, 0.008)
 cp_params = ModelParams(2, 2, 1, 4, 4)
-max_iter, max_time, alpha, dt, discount, step, scale, mode = 30, 146, .5, 0.008, 20, .005, 10, 'fwd'
+max_iter, max_time, alpha, dt, discount, step, scale, mode = 31, 146, .5, 0.008, 20, .005, 10, 'fwd'
 Q = torch.diag(torch.Tensor([25, 25, 0.5, .1])).repeat(sim_params.nsim, 1, 1).to(device)
 R = torch.diag(torch.Tensor([0.0001])).repeat(sim_params.nsim, 1, 1).to(device)
 Qf = torch.diag(torch.Tensor([25, 25, 0.5, .1])).repeat(sim_params.nsim, 1, 1).to(device)
 lambdas = torch.ones((sim_params.ntime-0, sim_params.nsim, 1, 1))
-cartpole = Cartpole(sim_params.nsim, cp_params, device)
+cartpole = Cartpole(sim_params.nsim, cp_params, device, mode='inv')
 renderer = MjRenderer("./xmls/cartpole.xml", 0.0001)
 
 
@@ -159,6 +159,10 @@ def loss_function(x, acc, alpha=1):
     loss = torch.mean(l_run + l_bellman + l_terminal)
     return torch.maximum(loss, torch.zeros_like(loss)) + l_nsd
 
+cartpole.GEAR = 1
+cartpole.LENGTH = 0.3
+cartpole.MASS_P = 0.1
+cartpole.FRICTION = torch.Tensor([0.0, 0.1]).to(device)
 
 dyn_system = ProjectedDynamicalSystem(
     nn_value_func, loss_func, sim_params, encoder=state_encoder, dynamics=cartpole, mode=mode, step=step, scale=scale, R=R
@@ -196,7 +200,7 @@ if __name__ == "__main__":
 
         print(f"Epochs: {iteration}, Loss: {loss.item()}\n")
 
-        if iteration % 5 == 0:
+        if iteration % 15 == 0:
             for i in range(0, sim_params.nsim, 20):
                 selection = random.randint(0, sim_params.nsim - 1)
                 renderer.render(traj[:, selection, 0, :sim_params.nq].cpu().detach().numpy())

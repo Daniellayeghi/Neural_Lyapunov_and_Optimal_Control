@@ -18,7 +18,7 @@ wandb.init(project='TL_control', anonymous='allow')
 
 sim_params = SimulationParams(6, 4, 2, 2, 2, 1, 20, 290, 0.01)
 tl_params = ModelParams(2, 2, 1, 4, 4)
-max_iter, max_time, alpha, dt, discount, step, scale, mode = 50, 300, .5, 0.01, 1.0, 15, 1, 'fwd'
+max_iter, max_time, alpha, dt, discount, step, scale, mode = 51, 300, .5, 0.01, 1.0, 15, 1, 'fwd'
 Q = torch.diag(torch.Tensor([1, 1, 0, 0])).repeat(sim_params.nsim, 1, 1).to(device)
 R = torch.diag(torch.Tensor([1, 1])).repeat(sim_params.nsim, 1, 1).to(device)
 Qf = torch.diag(torch.Tensor([10000, 10000, 100, 100])).repeat(sim_params.nsim, 1, 1).to(device)
@@ -132,7 +132,7 @@ def value_terminal_loss(x: torch.Tensor):
 def loss_function(x, acc, alpha=1):
     l_run = torch.sum(batch_inv_dynamics_loss(x, acc, alpha) + batch_state_loss(x), dim=0)
     l_bellman = backup_loss(x)
-    l_terminal = 1000  * value_terminal_loss(x)
+    l_terminal = 1000 * value_terminal_loss(x)
     return torch.mean(torch.square(l_run + l_bellman + l_terminal))
 
 init_lr = 8e-2
@@ -179,8 +179,8 @@ if __name__ == "__main__":
 
         print(f"Epochs: {iteration}, Loss: {loss.item()}\n")
 
-        if iteration % 15 == 0:
-            for i in range(0, sim_params.nsim, 10):
+        if iteration % 25 == 0:
+            for i in range(0, sim_params.nsim, 5):
                 selection = random.randint(0, sim_params.nsim - 1)
                 traj_tl_mj = transform_coordinates_tl(traj.clone())
                 renderer.render(traj_tl_mj[:, selection, 0, :tl_params.nq].cpu().detach().numpy())

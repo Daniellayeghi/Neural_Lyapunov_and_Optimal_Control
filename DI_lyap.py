@@ -21,8 +21,6 @@ Q = torch.diag(torch.Tensor([1, .01])).repeat(sim_params.nsim, 1, 1).to(device)*
 Qf = torch.diag(torch.Tensor([1, .01])).repeat(sim_params.nsim, 1, 1).to(device)*100
 R = torch.diag(torch.Tensor([.1])).repeat(sim_params.nsim, 1, 1).to(device)
 lambdas = torch.ones((sim_params.ntime, sim_params.nsim, 1, 1))
-renderer = MjRenderer("./xmls/pointmass.xml")
-
 
 torch.manual_seed(seed)
 
@@ -45,6 +43,10 @@ def plot_2d_funcition(xs: torch.Tensor, ys: torch.Tensor, xy_grid, f_mat, func, 
     else:
         ax = plt.axes(projection='3d')
         ax.plot_surface(X, Y, f_mat, rstride=1, cstride=1, cmap='viridis', edgecolor='none')
+
+    plt.xlabel("q", fontsize=14)
+    plt.ylabel("v", fontsize=14)
+    plt.title("Lyapunov Function", fontsize=18)
 
     n_plots = trace.shape[1]
     for i in range(n_plots):
@@ -147,8 +149,9 @@ def loss_function(x):
     return torch.maximum(loss, torch.zeros_like(loss))
 
 
-pos_arr = torch.linspace(-7, 7, 100).to(device)
-vel_arr = torch.linspace(-7, 7, 100).to(device)
+
+pos_arr = torch.linspace(-15, 15, 100).to(device)
+vel_arr = torch.linspace(-15, 15, 100).to(device)
 f_mat = torch.zeros((100, 100)).to(device)
 [X, Y] = torch.meshgrid(pos_arr.squeeze().cpu(), vel_arr.squeeze().cpu())
 time = torch.linspace(0, (sim_params.ntime - 1) * dt, sim_params.ntime).requires_grad_(True).to(device)
@@ -189,18 +192,17 @@ if __name__ == "__main__":
         print(f"Epochs: {iteration}, Loss: {loss.item()}")
         wandb.log({'epoch': iteration + 1, 'loss': loss.item()})
 
-        if iteration % 20 == 1:
+        if iteration % 10 == 0:
             with torch.no_grad():
                 plot_2d_funcition(pos_arr, vel_arr, [X, Y], f_mat, nn_value_func, trace=traj, contour=True)
-                renderer.render(traj[:, 0, 0, :sim_params.nq].cpu().detach().numpy())
+
+        plt.pause(0.01)
 
         iteration += 1
 
     plot_2d_funcition(pos_arr, vel_arr, [X, Y], f_mat, nn_value_func, trace=traj, contour=True)
 
-    plt.xlabel("q", fontsize=14)
-    plt.ylabel("v", fontsize=14)
-    plt.title("Lyapunov Function", fontsize=18)
+
     plt.tick_params(labelsize=12)
 
     # Save plot as high definition PNG

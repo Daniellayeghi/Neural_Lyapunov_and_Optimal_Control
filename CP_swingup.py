@@ -14,17 +14,17 @@ parser = argparse.ArgumentParser(description='Seed input')
 parser.add_argument('--seed', type=int, default=4, help='Random seed')
 args = parser.parse_args()
 seed = args.seed
-
+random.seed(seed)
 wandb.init(project='CP_swingup', anonymous="allow")
 torch.manual_seed(seed)
 sim_params = SimulationParams(6, 4, 2, 2, 2, 1, 200, 240, 0.01)
 cp_params = ModelParams(2, 2, 1, 4, 4)
-max_iter, max_time, alpha, dt, n_bins, discount, step, scale, mode = 150, 241, .5, 0.01, 3, 1, 15, 10, 'fwd'
+max_iter, max_time, alpha, dt, n_bins, discount, step, scale, mode = 101, 241, .5, 0.01, 3, 1, 15, 10, 'fwd'
 Q = torch.diag(torch.Tensor([.05, 5, .1, .1])).repeat(sim_params.nsim, 1, 1).to(device)
 R = torch.diag(torch.Tensor([0.0001])).repeat(sim_params.nsim, 1, 1).to(device)
 Qf = torch.diag(torch.Tensor([5, 300, 10, 10])).repeat(sim_params.nsim, 1, 1).to(device)
 lambdas = torch.ones((sim_params.ntime-2, sim_params.nsim, 1, 1))
-cartpole = Cartpole(sim_params.nsim, cp_params, device)
+cartpole = Cartpole(sim_params.nsim, cp_params, mode='fwd', device=device)
 renderer = MjRenderer("./xmls/cartpole.xml", 0.0001)
 
 def build_discounts(lambdas: torch.Tensor, discount: float):
@@ -185,7 +185,7 @@ if __name__ == "__main__":
 
         print(f"Epochs: {iteration}, Loss: {loss.item()} \n")
 
-        if iteration % 25 == 0:
+        if iteration % 50 == 0:
             for i in range(0, sim_params.nsim, 30):
                 selection = random.randint(0, sim_params.nsim - 1)
                 renderer.render(traj[:, selection, 0, :sim_params.nq].cpu().detach().numpy())

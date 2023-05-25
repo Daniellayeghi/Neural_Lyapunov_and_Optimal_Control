@@ -1,3 +1,7 @@
+Implementation for Neural Lyapunov and Optimal Control
+
+https://arxiv.org/abs/2305.15244
+
 Execution steps:
 
 This repository uses mujoco-py an therefore requires mujoco binaries. The steps for installing and copying

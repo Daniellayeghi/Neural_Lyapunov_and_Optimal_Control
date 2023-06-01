@@ -16,6 +16,7 @@ Once the "Install Mujoco" step is completed. First the user must install pipenv
 Then pipenv will install all necessary packages. Move to the cloned directory and use:
 
 - pipenv install
+- pipenv run pip install torch==1.10.1+cu113 --extra-index-url https://download.pytorch.org/whl/cu113/
 
 A pipenv shell can then be created
 

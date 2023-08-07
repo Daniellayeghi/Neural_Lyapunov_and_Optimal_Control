@@ -1,3 +1,7 @@
+Implementation for Neural Lyapunov and Optimal Control
+
+https://arxiv.org/abs/2305.15244
+
 Execution steps:
 
 This repository uses mujoco-py an therefore requires mujoco binaries. The steps for installing and copying
@@ -9,9 +13,10 @@ Once the "Install Mujoco" step is completed. First the user must install pipenv
 
 - pip install pipenv
 
-Then pipenv will install all necessary packages
+Then pipenv will install all necessary packages. Move to the cloned directory and use:
 
 - pipenv install
+- pipenv run pip install torch==1.10.1+cu113 --extra-index-url https://download.pytorch.org/whl/cu113/
 
 A pipenv shell can then be created
 
@@ -19,7 +24,7 @@ A pipenv shell can then be created
 
 To enable rendering update LD_LIBRARY_PATH in your current shell:
 
-- export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/daniel/.mujoco/mujoco210/bin
+- export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path_to_mujoco/mujoco210/bin
 
 Each of the examples CP_balancing, CP_swingup, DI_lyapunov, TL_control can then be ran using a seed eg:
 

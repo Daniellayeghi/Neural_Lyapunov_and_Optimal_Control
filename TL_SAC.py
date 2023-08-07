@@ -67,3 +67,4 @@ if __name__ == "__main__":
 
     res_path = main()
     plot_reward_graph_multi(res_path, "Reacher SAC")
+    plt.show()

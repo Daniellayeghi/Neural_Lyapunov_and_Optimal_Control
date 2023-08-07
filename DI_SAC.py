@@ -1,7 +1,7 @@
 from multiprocessing import freeze_support
 import gymnasium as gym
 from stable_baselines3 import SAC
-from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
+from stable_baselines3.common.vec_env import DummyVecEnv
 from gym_models import CustomDoubleIntegrator
 from stable_baselines3.common.callbacks import EvalCallback
 import numpy as np
@@ -21,7 +21,10 @@ def main():
 
     model_params = {
         'env_id': env_name,
-        'init_bound': (-3, 3),
+        'init_bound': {
+            'position': (-3, 3),
+            'velocity': (-3, 3)
+        },
         'terminal_time': 300,
     }
 
@@ -46,7 +49,6 @@ def main():
                 )
 
     eval_callback = EvalCallback(eval_env, log_path="./sac_tensorboard_di/", eval_freq=eval_freq, n_eval_episodes=5)
-    # episode_avg_reward_callback = EpisodeAverageRewardCallback(num_envs=nproc)
     model.learn(total_timesteps=int(total_timesteps), callback=eval_callback)
     # Close the environments after training is complete
     envs.close()

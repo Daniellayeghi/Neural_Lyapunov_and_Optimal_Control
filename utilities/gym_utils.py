@@ -30,10 +30,6 @@ class PolicyVisualizer:
         positions = []
 
         for _ in range(horizon):
-            print(f"Observation Type: {type(obs)}")
-            print(f"Observation Shape: {obs.shape}")
-            print(f"Observation Data Type: {obs.dtype}")
-
             action, _ = self.model.predict(obs)
             obs, _, _, _, _ = self.env.step(action)
             # Assuming the first element of obs is the position
@@ -41,10 +37,4 @@ class PolicyVisualizer:
 
         # Render the sequence of positions
         self.renderer.render(np.array(positions))
-
-# Example usage:
-# trained_model = ...  # Load your trained SB3 model
-# env_instance = CustomDoubleIntegrator()  # Create an instance of your custom environment
-# visualizer = PolicyVisualizer(trained_model, env_instance, xml_path="path_to_your_xml_file.xml")
-# visualizer.visualize(horizon=1000)
 

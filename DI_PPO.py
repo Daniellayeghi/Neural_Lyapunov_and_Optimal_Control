@@ -23,7 +23,10 @@ def main():
 
     model_params = {
         'env_id': env_name,
-        'init_bound': (-3, 3),
+        'init_bound': {
+            'position': (-3, 3),
+            'velocity': (-3, 3)
+        },
         'terminal_time': 300,
     }
 

@@ -8,10 +8,11 @@ numpy = "==1.21"
 recordtype = "*"
 wandb = "==0.14"
 protobuf = "==3.18"
-mujoco-py = "==2.1.2.14"
 matplotlib = "==3.5.3"
 torchdiffeq-ctrl = {ref = "euler", git = "https://github.com/Daniellayeghi/torchdiffeq_ctrl.git"}
 stable-baselines3 = {extras = ["extra"], version = "*"}
+mujoco-py = "*"
+cython = "<3"
 
 [dev-packages]
 

@@ -3,37 +3,50 @@ import numpy as np
 from typing import Optional
 from gymnasium import spaces
 from gymnasium.utils import seeding
+from utilities import mj_renderer
 
 
-class CustomDoubleIntegrator(gym.Env):
-    metadata = {'render.modes': ['human']}
+class CustomEnv(gym.Env):
+    def __init__(self, env_id, init_bound, terminal_time, observation_dim, action_dim, action_bounds):
+        super(CustomEnv, self).__init__()
 
+        self._iter = 0
+        self.lb, self.ub = init_bound
+        self._terminal_time = terminal_time
+        self._env_id = env_id
+
+        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(observation_dim,), dtype=np.float32)
+        self.action_space = spaces.Box(low=-action_bounds, high=action_bounds, shape=(action_dim,), dtype=np.float32)
+
+    def _terminated(self):
+        return self._iter >= self._terminal_time
+
+    def reset(self, *, seed: Optional[int] = None, return_info: bool = False, options: Optional[dict] = None):
+        self._iter = 0
+        if seed is not None:
+            self.seed(seed)
+        self._init_state = self.np_random.uniform(low=self.lb, high=self.ub, size=self.observation_space.shape)
+        self.state = self._init_state
+        return self.state, {}
+
+    def seed(self, seed=None):
+        self.np_random, seed = seeding.np_random(seed)
+        return [seed]
+
+
+class CustomDoubleIntegrator(CustomEnv):
     def __init__(self, env_id='custom_cp', init_bound=(-np.inf, np.inf), terminal_time=100):
-        super(CustomDoubleIntegrator, self).__init__()
-        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(2,), dtype=np.float32)
-        self.action_space = spaces.Box(low=-10, high=10, dtype=np.float32)
+        super(CustomDoubleIntegrator, self).__init__(env_id, init_bound, terminal_time, 2, 1, 10)
+
         self.fr = .1
         self.M = 1
         self.gear = 1
         self.dt = 0.01
         self.Q = np.diag(np.array([1, .01]))
         self.R = .01
-        self._iter = 0
-        self.lb, self.ub = init_bound
-        self._terminal_time = terminal_time
-        self._env_id = env_id
-        self.mean_reward = 0
-        self.rews = []
-        self.last_reward = 0
-        self._init_state = self.np_random.uniform(low=self.lb, high=self.ub, size=(2,))
-
-    def _terminated(self):
-        cond = (self._iter >= self._terminal_time)
-        return cond
 
     def _get_reward(self, state, u):
-        return np.exp(-.1*(state ** 2 + self.R*u**2))
-        # return -((state.T @ self.Q @ state) + self.R*u**2)
+        return np.exp(-.1 * (state ** 2 + self.R * u ** 2))
 
     def _enc_state(self):
         q, qd = self.state
@@ -46,9 +59,6 @@ class CustomDoubleIntegrator(gym.Env):
         q_new = q + qd * self.dt
         qd_new = qd + qdd * self.dt
         self.reward = self._get_reward(self._enc_state(), u)[0]
-        self.last_reward = self.reward
-        self.rews.append(self.reward)
-        self.mean_rew = sum(self.rews)/len(self.rews)
         self.state = np.array([q_new, qd_new]).flatten()
         self._iter += 1
 
@@ -56,49 +66,17 @@ class CustomDoubleIntegrator(gym.Env):
 
         return self.state, self.reward, terminate, terminate, {}
 
-    def reset(
-            self,
-            *,
-            seed: Optional[int] = None,
-            return_info: bool = False,
-            options: Optional[dict] = None
-    ):
-        self._iter = 0
-        if seed is not None:
-            self.seed(seed)
-        self._init_state = self.np_random.uniform(low=self.lb, high=self.ub, size=(2,))
-        self.state = self._init_state
-        self.rews = []
-        return self.state, {}
 
-    def seed(self, seed=None):
-        self.np_random, seed = seeding.np_random(seed)
-        return [seed]
+class CustomReacher(CustomEnv):
+    def __init__(self, env_id, init_bound, terminal_time):
+        super(CustomReacher, self).__init__(env_id, init_bound, terminal_time, 4, 2, 40)
 
-
-class CustomReacher(gym.Env):
-    metadata = {'render.modes': ['human']}
-
-    def __init__(self, env_id, init_bound, terminal_time, seed):
-        super(CustomReacher, self).__init__()
-        self.observation_space = spaces.Box(low=-np.inf, high=np.inf,  shape=(4,), dtype=np.float32)
-        self.action_space = spaces.Box(low=-40, high=40, shape=(2,), dtype=np.float32)
         self.fr = np.array([0.025, 0.025]).reshape(2, 1)
         self.B = np.array([1, 1]).reshape(2, 1)
         self.gear = 0, 1
         self.dt = 0.01
         self.Q = np.diag(np.array([1, 1, 0, 0]))
         self.R = np.diag(np.array([1, 1]))
-        self._iter = 0
-        self.lb, self.ub = init_bound
-        self._terminal_time = terminal_time
-        self._init_state = self.np_random.uniform(low=self.lb, high=self.ub, size=(4,))
-        self._env_id = env_id
-        self.reward = 0
-
-    def _terminated(self):
-        cond = (self._iter >= self._terminal_time)
-        return cond
 
     def _get_reward(self, state, u):
         return -(state.T @ self.Q @ state + u.T @ self.R @ u)
@@ -137,17 +115,3 @@ class CustomReacher(gym.Env):
 
         terminate = self._terminated()
         return self.state, self.reward, terminate, terminate, {}
-
-    def reset(
-            self,
-            *,
-            seed: Optional[int] = None,
-            return_info: bool = False,
-            options: Optional[dict] = None
-    ):
-        self._iter = 0
-        if seed is not None:
-            self.seed(seed)
-        self._init_state = self.np_random.uniform(low=self.lb, high=self.ub, size=(4,))
-        self.state = self._init_state
-        return self.state, {}

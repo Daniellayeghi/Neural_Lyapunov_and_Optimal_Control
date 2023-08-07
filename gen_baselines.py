@@ -20,6 +20,8 @@ if __name__ == "__main__":
 
     ppo_res, sac_res = [q.get() for q in queues]
 
+    print("Generating plots")
+
     plot_reward_graph_multi(ppo_res, "DI PPO")
     plot_reward_graph_multi(sac_res, "DI SAC")
     plt.show()

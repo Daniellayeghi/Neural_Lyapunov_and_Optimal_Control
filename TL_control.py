@@ -4,7 +4,7 @@ from neural_value_synthesis_diffeq import *
 from utilities.mujoco_torch import SimulationParams
 from time_search import optimal_time
 from torchdiffeq_ctrl import odeint_adjoint as ctrl_odeint
-from mj_renderer import *
+from utilities.mj_renderer import *
 import wandb
 import argparse
 

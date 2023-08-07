@@ -6,7 +6,7 @@ from utilities.torch_device import device
 from utilities.mujoco_torch import SimulationParams
 from time_search import optimal_time
 from PSDNets import ICNN
-from mj_renderer import *
+from utilities.mj_renderer import *
 import wandb
 import argparse
 parser = argparse.ArgumentParser(description='Seed input')

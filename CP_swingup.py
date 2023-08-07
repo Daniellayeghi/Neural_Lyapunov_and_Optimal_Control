@@ -7,7 +7,7 @@ from torchdiffeq_ctrl import odeint_adjoint as odeint
 from utilities.mujoco_torch import SimulationParams
 from time_search import optimal_time
 import wandb
-from mj_renderer import *
+from utilities.mj_renderer import *
 import argparse
 
 parser = argparse.ArgumentParser(description='Seed input')

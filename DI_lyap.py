@@ -1,6 +1,5 @@
 
 from models import DoubleIntegrator, ModelParams
-from mj_renderer import *
 from neural_value_synthesis_diffeq import *
 import matplotlib.pyplot as plt
 from torchdiffeq_ctrl import odeint_adjoint as odeint

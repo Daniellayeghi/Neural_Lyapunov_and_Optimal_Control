@@ -1,12 +1,13 @@
 from multiprocessing import freeze_support
 from collections import OrderedDict
+import numpy as np
 import gymnasium as gym
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv
 from gym_models import CustomDoubleIntegrator
 from stable_baselines3.common.callbacks import EvalCallback
-import numpy as np
-from utilities.gym_utils import make_subproc_vec_env
+from utilities.gym_utils import make_subproc_vec_env, PolicyVisualizer
+
 gym.logger.MIN_LEVEL = gym.logger.min_level
 
 env_name = 'CustomDoubleIntegrator'
@@ -47,6 +48,10 @@ def main():
     rewards = res['results']
     path = f"./data/{env_name}_rewards_ppo.csv"
     np.savetxt(path, rewards, delimiter=",")
+
+    env_instance = CustomDoubleIntegrator(**model_params)  # Create an instance of your custom environment
+    visualizer = PolicyVisualizer(model, env_instance, xml_path="./xmls/doubleintegrator.xml")
+    visualizer.visualize(horizon=300)
 
     return path
 

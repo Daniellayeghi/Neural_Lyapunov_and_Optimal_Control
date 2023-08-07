@@ -8,7 +8,7 @@ from gymnasium.utils import seeding
 class CustomDoubleIntegrator(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, env_id, init_bound, terminal_time, seed):
+    def __init__(self, env_id='custom_cp', init_bound=(-np.inf, np.inf), terminal_time=100):
         super(CustomDoubleIntegrator, self).__init__()
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(2,), dtype=np.float32)
         self.action_space = spaces.Box(low=-10, high=10, dtype=np.float32)
@@ -24,7 +24,6 @@ class CustomDoubleIntegrator(gym.Env):
         self._env_id = env_id
         self.mean_reward = 0
         self.rews = []
-        self._seed = seed
         self.last_reward = 0
         self._init_state = self.np_random.uniform(low=self.lb, high=self.ub, size=(2,))
 

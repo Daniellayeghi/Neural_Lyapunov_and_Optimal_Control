@@ -1,11 +1,12 @@
-
+from multiprocessing import freeze_support
 import gymnasium as gym
-gym.logger.MIN_LEVEL = gym.logger.min_level
 from stable_baselines3 import SAC
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 from gym_models import CustomDoubleIntegrator
 from stable_baselines3.common.callbacks import EvalCallback
 import numpy as np
+from utilities.gym_utils import make_subproc_vec_env
+gym.logger.MIN_LEVEL = gym.logger.min_level
 
 env_name = 'CustomDoubleIntegrator'
 epochs, terminal_time, nproc = 80, 300, 6
@@ -14,25 +15,18 @@ eval_freq = int(total_timesteps / (nproc * epochs))
 
 print(f"Running {env_name} for {epochs} epochs resulting in {total_timesteps} total time.")
 
-from multiprocessing import freeze_support
 
-if __name__ == "__main__":
+def main():
     freeze_support()
 
+    model_params = {
+        'env_id': env_name,
+        'init_bound': (-3, 3),
+        'terminal_time': 300,
+    }
 
-    def make_env(env_id, seed):
-        def _f():
-            env = CustomDoubleIntegrator(env_id, (-3, 3), terminal_time, seed)
-            env.seed(seed)
-            return env
-
-        return _f
-
-
-    envs = [make_env(env_name, seed) for seed in range(nproc)]
-    envs = SubprocVecEnv(envs)
-
-    eval_env = DummyVecEnv([lambda: CustomDoubleIntegrator(100, (-3, 3), terminal_time, 100)])
+    envs = make_subproc_vec_env(model_type=CustomDoubleIntegrator, nproc=nproc, **model_params)
+    eval_env = DummyVecEnv([lambda: CustomDoubleIntegrator(**model_params)])
 
     model = SAC("MlpPolicy",
                 envs,
@@ -58,4 +52,11 @@ if __name__ == "__main__":
     envs.close()
     res = np.load("./sac_tensorboard_di/evaluations.npz")
     rewards = res['results']
-    np.savetxt(f"{env_name}_rewards_sac.csv", rewards, delimiter=",")
+    path = f"./data/{env_name}_rewards_sac.csv"
+    np.savetxt(path, rewards, delimiter=",")
+
+    return path
+
+
+if __name__ == "__main__":
+    main()

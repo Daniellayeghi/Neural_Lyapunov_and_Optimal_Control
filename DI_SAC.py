@@ -2,13 +2,14 @@ from multiprocessing import freeze_support
 import gymnasium as gym
 from stable_baselines3 import SAC
 from stable_baselines3.common.vec_env import DummyVecEnv
-from gym_models import CustomDoubleIntegrator
+from gym_baselines.gym_models import CustomDoubleIntegrator
 from stable_baselines3.common.callbacks import EvalCallback
 import numpy as np
 from utilities.gym_utils import make_subproc_vec_env
 gym.logger.MIN_LEVEL = gym.logger.min_level
 
-env_name = 'CustomDoubleIntegrator'
+env_name = 'Custom Double Integrator SAC'
+tb_name = "./sac_tensorboard_di/"
 epochs, terminal_time, nproc = 80, 300, 6
 total_timesteps = (nproc * terminal_time) * epochs
 eval_freq = int(total_timesteps / (nproc * epochs))
@@ -44,15 +45,15 @@ def main():
                 train_freq=32,
                 use_sde=True,
                 policy_kwargs=dict(log_std_init=-3.67, net_arch=[64, 64]),
-                tensorboard_log="./sac_tensorboard_di/",
+                tensorboard_log=tb_name,
                 verbose=1
                 )
 
-    eval_callback = EvalCallback(eval_env, log_path="./sac_tensorboard_di/", eval_freq=eval_freq, n_eval_episodes=5)
+    eval_callback = EvalCallback(eval_env, log_path=tb_name, eval_freq=eval_freq, n_eval_episodes=5)
     model.learn(total_timesteps=int(total_timesteps), callback=eval_callback)
     # Close the environments after training is complete
     envs.close()
-    res = np.load("./sac_tensorboard_di/evaluations.npz")
+    res = np.load(f"{tb_name}/evaluations.npz")
     rewards = res['results']
     path = f"./data/{env_name}_rewards_sac.csv"
     np.savetxt(path, rewards, delimiter=",")
@@ -61,4 +62,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    from utilities.plotting import plot_reward_graph_multi
+    import matplotlib.pyplot as plt
+
+    res_path = main()
+    plot_reward_graph_multi(res_path, env_name)
+    plt.show()
+

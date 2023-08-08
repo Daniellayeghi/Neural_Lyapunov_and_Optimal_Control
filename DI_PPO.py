@@ -4,13 +4,14 @@ import numpy as np
 import gymnasium as gym
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv
-from gym_models import CustomDoubleIntegrator
+from gym_baselines.gym_models import CustomDoubleIntegrator
 from stable_baselines3.common.callbacks import EvalCallback
 from utilities.gym_utils import make_subproc_vec_env, PolicyVisualizer
 
 gym.logger.MIN_LEVEL = gym.logger.min_level
 
-env_name = 'CustomDoubleIntegrator'
+env_name = 'Custom Double Integrator PPO'
+tb_name = './ppo_tensorboard_di/'
 epochs, terminal_time, nproc = 80, 300, 6
 total_timesteps = (nproc * terminal_time) * epochs
 eval_freq = int(total_timesteps / (nproc * epochs))
@@ -43,11 +44,11 @@ def main():
          ('normalize_advantage', True)]
     )
 
-    model = PPO(**ppo_params, env=envs, tensorboard_log="./ppo_tensorboard_di/", verbose=1)
-    eval_callback = EvalCallback(eval_env, log_path="./ppo_tensorboard_di/", eval_freq=eval_freq, n_eval_episodes=5)
+    model = PPO(**ppo_params, env=envs, tensorboard_log=tb_name, verbose=1)
+    eval_callback = EvalCallback(eval_env, log_path=tb_name, eval_freq=eval_freq, n_eval_episodes=5)
     model.learn(total_timesteps=int(total_timesteps), callback=eval_callback)
     envs.close()
-    res = np.load("./ppo_tensorboard_di/evaluations.npz")
+    res = np.load(f"{tb_name}evaluations.npz")
     rewards = res['results']
     path = f"./data/{env_name}_rewards_ppo.csv"
     np.savetxt(path, rewards, delimiter=",")
@@ -60,4 +61,9 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    from utilities.plotting import plot_reward_graph_multi
+    import matplotlib.pyplot as plt
+
+    res_path = main()
+    plot_reward_graph_multi(res_path, env_name)
+    plt.show()

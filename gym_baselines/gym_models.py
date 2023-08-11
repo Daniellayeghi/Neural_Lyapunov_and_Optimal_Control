@@ -92,7 +92,7 @@ class CustomReacher(CustomEnv):
         self._R = np.diag(np.array([1, 1]))
 
     def _get_reward(self, state, u):
-        return np.exp(-.01*(state.T @ self._Q @ state + u.T @ self._R @ u))
+        return -1*(state.T @ self._Q @ state + u.T @ self._R @ u)
 
     def _enc_state(self):
         q1, q2, qd1, qd2 = self.state
@@ -124,9 +124,59 @@ class CustomReacher(CustomEnv):
         qdp_new = qd2 + qdd2 * self._dt
         self.reward = self._get_reward(self._enc_state(), u)
         self.state = np.array([qc_new, qp_new, qdc_new, qdp_new]).flatten()
-        assert not np.isnan(self.reward).any(), "The reward contains NaN values!"
-        assert not np.isnan(self.state).any(), "The state contains NaN values!"
         self._iter += 1
 
         terminate = self._terminated()
         return self._enc_state(), self.reward, terminate, terminate, {}
+
+
+class CustomCartpole(CustomEnv):
+    def __init__(self, env_id, init_bound=(-np.inf, np.inf), terminal_time=100, return_state=False):
+        super(CustomCartpole, self).__init__(env_id, init_bound, terminal_time, 4, 1, 100)
+
+        # Parameters specific to the cart-pole environment
+        self._mass_p, self._mass_c, self._l = .1, 1, .3
+        self._g, self._gear = -9.81, 1
+        self._fr = np.array([0, .01]).reshape(2, 1)
+        self._Q = np.diag(np.array([5, 25, 0.5, .1]))
+        self._R = 0.01
+        self._dt = .01
+        self._retrun_state = return_state
+
+    def _get_reward(self, obs, u):
+        return -(obs.T @ self._Q @ obs + self._R * u ** 2)
+
+    def _enc_state(self):
+        qc, qp, qdc, qdp = self.state
+        enc = lambda x: (1 - np.cos(x)) / 2
+        return np.array([qc, enc(qp), qdc, qdp], dtype=np.float32)
+
+    def step(self, u):
+        qc, qp, qdc, qdp = self.state
+        qd = np.array([qdc, qdp]).reshape(2, 1)
+        m_p, m_c, g, gear, l = self._mass_p, self._mass_c, self._g, self._gear, self._l
+        M = np.array([m_p + m_c, m_p * l * np.cos(qp), m_p * l * np.cos(qp), m_p * l ** 2]).reshape(2, 2)
+        C = np.array([0, -m_p * l * qdp * np.sin(qp), 0, 0]).reshape(2, 2)
+        Tg = np.array([0, -m_p * g * l * np.sin(qp)]).reshape(2, 1)
+        B = np.array([1, 0]).reshape(2, 1)
+
+        qdd = (np.linalg.inv(M) @ (-C @ qd + Tg - self._fr * qd + B * u)).flatten()
+        qddc, qddp = qdd[0], qdd[1]
+        qc_new = qc + qdc * self._dt
+        qdc_new = qdc + qddc * self._dt
+        qp_new = qp + qdp * self._dt
+        qdp_new = qdp + qddp * self._dt
+        self.reward = self._get_reward(self._enc_state(), u)
+        self.state = np.array([qc_new, qp_new, qdc_new, qdp_new]).flatten()
+        self._iter += 1
+
+        terminate = self._terminated()
+
+        if self._retrun_state:
+            return self.state, self.reward, terminate, terminate, {}
+
+        return self._enc_state(), self.reward, terminate, terminate, {}
+
+    def _terminated(self):
+        return np.abs(self.state[1]) > 0.6 or self._iter >= self._terminal_time
+

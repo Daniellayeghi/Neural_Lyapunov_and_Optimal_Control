@@ -24,7 +24,6 @@ class BaseRBD(object):
             self.simulator = self.simulate_REG
         self._stabilize = stabilize
 
-
     def _Muact(self, q):
         pass
 

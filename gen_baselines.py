@@ -13,10 +13,10 @@ def wrapper(func, queue):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run reinforcement learning algorithms on specified environments.')
     parser.add_argument(
-        '--env', choices=['di', 'tl', 'cp_balance'], default=['tl'], nargs='+', help='Environment(s) to run'
+        '--env', choices=['di', 'tl', 'cp_balance'], default=['cp_balance'], nargs='+', help='Environment(s) to run'
     )
     parser.add_argument(
-        '--solver', choices=['ppo', 'sac'], default=['ppo'], nargs='+', help='ppo and/or sac'
+        '--solver', choices=['ppo', 'sac'], default=['sac'], nargs='+', help='ppo and/or sac'
     )
     args = parser.parse_args()
 

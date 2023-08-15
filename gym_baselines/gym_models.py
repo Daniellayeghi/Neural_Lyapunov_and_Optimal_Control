@@ -56,10 +56,10 @@ class CustomDoubleIntegrator(CustomEnv):
         self._gear = 1
         self._dt = 0.01
         self._Q = np.diag(np.array([1, .01]))
-        self._R = .01
+        self._R = np.array([[.01]])
 
     def _get_reward(self, state, u):
-        return np.exp(-.1 * (state ** 2 + self._R * u ** 2))
+        return np.exp(-.1 * (state.T @ self._Q @ state + u.T @ self._R @ u))
 
     def _enc_state(self):
         q, qd = self.state
@@ -71,7 +71,7 @@ class CustomDoubleIntegrator(CustomEnv):
 
         q_new = q + qd * self._dt
         qd_new = qd + qdd * self._dt
-        self.reward = self._get_reward(self._enc_state(), u)[0]
+        self.reward = self._get_reward(self._enc_state(), u)
         self.state = np.array([q_new, qd_new]).flatten()
         self._iter += 1
 
@@ -132,19 +132,21 @@ class CustomReacher(CustomEnv):
 
 class CustomCartpole(CustomEnv):
     def __init__(self, env_id, init_bound=(-np.inf, np.inf), terminal_time=100, return_state=False):
-        super(CustomCartpole, self).__init__(env_id, init_bound, terminal_time, 4, 1, 100)
+        super(CustomCartpole, self).__init__(
+            env_id, init_bound, terminal_time, 4, 1, 100
+        )
 
         # Parameters specific to the cart-pole environment
         self._mass_p, self._mass_c, self._l = .1, 1, .3
         self._g, self._gear = -9.81, 1
         self._fr = np.array([0, .01]).reshape(2, 1)
         self._Q = np.diag(np.array([5, 25, 0.5, .1]))
-        self._R = 0.01
+        self._R = np.array([[0.01]])
         self._dt = .01
         self._retrun_state = return_state
 
-    def _get_reward(self, obs, u):
-        return -(obs.T @ self._Q @ obs + self._R * u ** 2)
+    def _get_reward(self, state, u):
+        return -(state.T @ self._Q @ state + u.T @ self._R @ u)
 
     def _enc_state(self):
         qc, qp, qdc, qdp = self.state

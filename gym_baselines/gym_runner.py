@@ -58,6 +58,7 @@ def get_main_function(env, solver):
         eval_freq = int(total_timesteps / (config['nproc'] * config['epochs']))
         _run_learning_process(model, total_timesteps, eval_env, config['hyperparameters']['tensorboard_log'], eval_freq)
         path = _save_results(config['hyperparameters']['tensorboard_log'], config['env_name'], solver)
-        name = f"{env.upper()}_{solver.upper()}_{config['epochs']}"
-        return path, model, name
+        name = f"./models/{env.upper()}_{solver.upper()}_{config['epochs']}"
+        model.save(f"{name}")
+        return path, name
     return main_function

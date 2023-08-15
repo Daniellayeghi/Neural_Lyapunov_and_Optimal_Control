@@ -190,7 +190,7 @@ configurations = {
     'CP_BALANCE_SAC': {
         'model_type': CustomCartpole,
         'env_name': 'Custom Reacher SAC',
-        'epochs': 100,
+        'epochs': 5,
         'terminal_time': 300,
         'nproc': 6,
         'hyperparameters': {

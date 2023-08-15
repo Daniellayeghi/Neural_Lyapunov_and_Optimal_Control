@@ -38,9 +38,8 @@ if __name__ == "__main__":
 
     # Collect results and generate plots
     for queue, env, solver in zip(queues, args.env*len(args.solver), args.solver*len(args.env)):
-        result, model, name = queue.get()
+        result, model_path = queue.get()
         print("Generating plots")
-        model.save(f"/models/{name}")
         plot_reward_graph_multi(result, f"{env.upper()} {solver.upper()}")
     plt.show()
 

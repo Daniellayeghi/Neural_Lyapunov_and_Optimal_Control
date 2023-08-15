@@ -3,7 +3,6 @@ import numpy as np
 from utilities.mj_renderer import MjRenderer
 
 
-
 class PolicyVisualizer:
     def __init__(self, model, env, xml_path: str, transform_func=lambda x: x):
 
@@ -37,13 +36,6 @@ class ValueFunction:
         self._model = model
 
     def __call__(self, state):
-        """
-        Compute the state value for a given state using the forward method.
-
-        :param model: The trained SB3 model with the provided forward method.
-        :param state: The state for which the value should be computed.
-        :return: The state value V(s).
-        """
         # Convert the state to a PyTorch tensor
         state_tensor = torch.as_tensor(state, device=self._model.policy.device).unsqueeze(0)
 

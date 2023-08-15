@@ -195,22 +195,22 @@ configurations = {
         'nproc': 6,
         'hyperparameters': {
             'batch_size': 256,
-            'buffer_size': 1e6,
+            'buffer_size': 300000,
             'ent_coef': 'auto',
-            'gamma': 0.99,
+            'gamma': 0.98,
             'gradient_steps': 64,
-            'learning_rate': 2e-4,
-            'learning_starts': 5e3,
+            'learning_rate': .00073,
+            'learning_starts': 10000,
             'policy': 'MlpPolicy',
             'policy_kwargs': {
                 'activation_fn': nn.ReLU,
                 'log_std_init': -3,
-                'net_arch': [256, 256]
+                'net_arch': [400, 300]
             },
-            'tau': 0.005,
+            'tau': 0.02,
             'train_freq': 64,
             'use_sde': False,
-            'tensorboard_log': './sac_tensorboard_tl/',
+            'tensorboard_log': './sac_tensorboard_cp_balance/',
             'verbose': 1
         },
         'model_params': {
@@ -223,3 +223,5 @@ configurations = {
         }
     },
 }
+
+

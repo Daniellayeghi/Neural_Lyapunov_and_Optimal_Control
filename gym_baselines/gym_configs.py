@@ -149,26 +149,27 @@ configurations = {
     'CP_BALANCE_PPO': {
         'model_type': CustomCartpole,
         'env_name': 'Custom Cartpole Balance PPO',
-        'epochs': 800,
-        'terminal_time': 100,
+        'epochs': 200,
+        'terminal_time': 300,
         'nproc': 8,
         'hyperparameters': {
-            'batch_size': 32,
-            'clip_range': 0.2,  # Placeholder, since this uses a function
+            'batch_size': 128,
+            'clip_range': 0.4,  # Placeholder, since this uses a function
             'ent_coef': 0.0,
-            'gae_lambda': 0.95,
+            'gae_lambda': 0.92,
             'gamma': 0.99,
-            'learning_rate': 3e-4,
+            'learning_rate': 3e-5,
             'max_grad_norm': 0.5,
-            'n_epochs': 10,
-            'n_steps': 2048,
+            'n_epochs': 20,
+            'n_steps': 512,
             'policy': 'MlpPolicy',
             'policy_kwargs': {
                 'log_std_init': -2.7,
-                'activation_fn': nn.Tanh,
+                'activation_fn': nn.ReLU,
+                'ortho_init': False,
                 'net_arch': {
-                    'pi': [64, 64],
-                    'vf': [64, 64]
+                    'pi': [256, 256],
+                    'vf': [256, 256]
                 }
             },
             'sde_sample_freq': 4,
@@ -184,7 +185,7 @@ configurations = {
                 'position': (-.6, .6),
                 'velocity': (0.1, 0.1)
             },
-            'terminal_time': 100
+            'terminal_time': 300
         }
     },
     'CP_BALANCE_SAC': {

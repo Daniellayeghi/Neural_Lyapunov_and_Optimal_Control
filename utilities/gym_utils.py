@@ -13,7 +13,7 @@ class PolicyVisualizer:
 
     def _simulate(self):
         action, _ = self._model.predict(self._obs)
-        res = self._env.step(np.clip(action, -20, 20))
+        res = self._env.step(action)
         self._obs = res[0]
         pos_size = self._obs.flatten().shape[0] // 2
         return self._obs.flatten()[:pos_size]

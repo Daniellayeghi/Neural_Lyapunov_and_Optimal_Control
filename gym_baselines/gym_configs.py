@@ -216,7 +216,7 @@ configurations = {
         'model_params': {
             'env_id': 'Custom Reacher SAC',
             'init_bound': {
-                'position': (-3, 3),
+                'position': (-.3, .3),
                 'velocity': (0, 0)
             },
             'terminal_time': 300

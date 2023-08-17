@@ -3,6 +3,7 @@ import numpy as np
 from typing import Optional
 from gymnasium import spaces
 from gymnasium.utils import seeding
+from utilities.gym_utils import PolicyVisualizer
 
 
 class CustomEnv(gym.Env):
@@ -143,7 +144,7 @@ class CustomCartpole(CustomEnv):
         self._Q = np.diag(np.array([5, 25, 0.5, .1]))
         self._R = np.array([[0.01]])
         self._dt = .01
-        self._retrun_state = return_state
+        self.retrun_state = return_state
 
     def _get_reward(self, state, u):
         return -(state.T @ self._Q @ state + u.T @ self._R @ u)
@@ -154,6 +155,9 @@ class CustomCartpole(CustomEnv):
         return np.array([qc, enc(qp), qdc, qdp], dtype=np.float32)
 
     def step(self, u):
+        # Something is wrong in the computing the effective torque on the pole here
+        # limit force applied. Seems like at very high forces the behaviour is completely linear
+        
         qc, qp, qdc, qdp = self.state
         qd = np.array([qdc, qdp]).reshape(2, 1)
         m_p, m_c, g, gear, l = self._mass_p, self._mass_c, self._g, self._gear, self._l
@@ -162,7 +166,7 @@ class CustomCartpole(CustomEnv):
         Tg = np.array([0, -m_p * g * l * np.sin(qp)]).reshape(2, 1)
         B = np.array([1, 0]).reshape(2, 1)
 
-        qdd = (np.linalg.inv(M) @ (-C @ qd + Tg - self._fr * qd + B * u)).flatten()
+        qdd = (np.linalg.inv(M) @ (-C @ qd - self._fr * qd + Tg + B * u)).flatten()
         qddc, qddp = qdd[0], qdd[1]
         qc_new = qc + qdc * self._dt
         qdc_new = qdc + qddc * self._dt
@@ -174,11 +178,8 @@ class CustomCartpole(CustomEnv):
 
         terminate = self._terminated()
 
-        if self._retrun_state:
-            return self.state, self.reward, terminate, terminate, {}
-
-        return self._enc_state(), self.reward, terminate, terminate, {}
+        return self.state, self.reward, terminate, terminate, {}
 
     def _terminated(self):
-        return np.abs(self.state[1]) > 0.6 or self._iter >= self._terminal_time
-
+        out_of_bounds = np.abs(self.state[1]) > np.pi*2
+        return self._iter >= self._terminal_time or out_of_bounds

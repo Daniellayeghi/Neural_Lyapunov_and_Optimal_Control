@@ -1,3 +1,4 @@
+import numpy as np
 from gym_baselines.gym_models import CustomCartpole
 from utilities.gym_utils import PolicyVisualizer
 
@@ -14,7 +15,7 @@ env = CustomCartpole(
 
 class ZeroControlModel:
     def predict(self, obs):
-        return 0, None  # Always returning 0 control input and None for state
+        return np.zeros((1, env.action_space._shape[0])), None  # Always returning 0 control input and None for state
 
 
 model = ZeroControlModel()

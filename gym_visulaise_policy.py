@@ -14,7 +14,7 @@ def generate_model_and_env(env, solver):
 
 def main():
     parser = argparse.ArgumentParser(description="Visualize a policy using a given model and environment type.")
-    parser.add_argument('--model_path', type=str, default= './models/CP_BALANCE_SAC_5.zip', help="Path to the saved model.")
+    parser.add_argument('--model_path', type=str, default= './models/CP_BALANCE_SAC_100.zip', help="Path to the saved model.")
     parser.add_argument('--xml_path', type=str, default="./xmls/cartpole.xml", help="Path to the XML file for rendering.")
     parser.add_argument('--horizon', type=int, default=300, help="Time horizon for visualization.")
     parser.add_argument('--env', choices=['di', 'tl', 'cp_balance'], default='cp_balance', help='Environment(s) to run')

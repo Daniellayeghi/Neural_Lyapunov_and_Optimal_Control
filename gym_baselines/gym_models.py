@@ -134,7 +134,7 @@ class CustomReacher(CustomEnv):
 class CustomCartpole(CustomEnv):
     def __init__(self, env_id, init_bound=(-np.inf, np.inf), terminal_time=100, return_state=False):
         super(CustomCartpole, self).__init__(
-            env_id, init_bound, terminal_time, 4, 1, 20
+            env_id, init_bound, terminal_time, 4, 1, 40
         )
         # Parameters specific to the cart-pole environment
         self._mass_p, self._mass_c, self._l = .1, 1, .3

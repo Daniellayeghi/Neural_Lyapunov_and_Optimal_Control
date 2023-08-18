@@ -149,7 +149,7 @@ configurations = {
     'CP_BALANCE_PPO': {
         'model_type': CustomCartpole,
         'env_name': 'Custom Cartpole Balance PPO',
-        'epochs': 200,
+        'epochs': 400,
         'terminal_time': 300,
         'nproc': 8,
         'hyperparameters': {
@@ -183,7 +183,7 @@ configurations = {
             'env_id': 'Custom Cartpole Balance PPO',
             'init_bound': {
                 'position': (-.6, .6),
-                'velocity': (0.1, 0.1)
+                'velocity': (0, 0)
             },
             'terminal_time': 300
         }
@@ -191,7 +191,7 @@ configurations = {
     'CP_BALANCE_SAC': {
         'model_type': CustomCartpole,
         'env_name': 'Custom Reacher SAC',
-        'epochs': 5,
+        'epochs': 100,
         'terminal_time': 300,
         'nproc': 6,
         'hyperparameters': {
@@ -217,7 +217,7 @@ configurations = {
         'model_params': {
             'env_id': 'Custom Reacher SAC',
             'init_bound': {
-                'position': (-.3, .3),
+                'position': (-.6, .6),
                 'velocity': (0, 0)
             },
             'terminal_time': 300

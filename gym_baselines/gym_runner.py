@@ -1,10 +1,11 @@
 from multiprocessing import freeze_support
 import numpy as np
+import gymnasium as gym
 from stable_baselines3 import PPO, SAC
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 from stable_baselines3.common.callbacks import EvalCallback
-import gymnasium as gym
 from gym_baselines.gym_configs import configurations
+from utilities.gym_utils import VisualizePolicyCallback
 
 
 def _make_env(model_type: gym.Env, seed, **model_params):
@@ -12,6 +13,7 @@ def _make_env(model_type: gym.Env, seed, **model_params):
         env = model_type(**model_params)
         env.seed(seed)
         return env
+
     return _f
 
 
@@ -35,8 +37,9 @@ def _initialize_model(algorithm, envs, hyperparameters):
     return model
 
 
-def _run_learning_process(model, total_timesteps, eval_env, tb_name, eval_freq):
-    eval_callback = EvalCallback(eval_env, log_path=tb_name, eval_freq=eval_freq, n_eval_episodes=5)
+def _run_learning_process(model, total_timesteps, eval_env, tb_name, eval_freq, xml_path):
+    eval_callback = VisualizePolicyCallback(eval_env, xml_path, log_path=tb_name, eval_freq=eval_freq,
+                                            n_eval_episodes=5)
     model.learn(total_timesteps=total_timesteps, callback=eval_callback)
 
 
@@ -56,9 +59,16 @@ def get_main_function(env, solver):
         model = _initialize_model(solver.upper(), envs, config['hyperparameters'])
         total_timesteps = config['nproc'] * config['terminal_time'] * config['epochs']
         eval_freq = int(total_timesteps / (config['nproc'] * config['epochs']))
-        _run_learning_process(model, total_timesteps, eval_env, config['hyperparameters']['tensorboard_log'], eval_freq)
+
+        # All the training loop happens here #
+        _run_learning_process(
+            model, total_timesteps, eval_env, config['hyperparameters']['tensorboard_log'], eval_freq,
+            config['xml_path']
+        )
+
         path = _save_results(config['hyperparameters']['tensorboard_log'], config['env_name'], solver)
         name = f"./models/{env.upper()}_{solver.upper()}_{config['epochs']}"
         model.save(f"{name}")
         return path, name
+
     return main_function

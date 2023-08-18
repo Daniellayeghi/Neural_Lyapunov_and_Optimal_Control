@@ -1,15 +1,17 @@
 import torch
 import numpy as np
+from stable_baselines3.common.callbacks import EvalCallback
 from utilities.mj_renderer import MjRenderer
 
 
 class PolicyVisualizer:
-    def __init__(self, model, env, xml_path: str, transform_func=lambda x: x):
+    def __init__(self, model, env, xml_path: str, transform_func=lambda x: x, limit=np.inf):
         self._model = model
         self._env = env
         self._renderer = MjRenderer(xml_path)
         self._transform_func = transform_func
         self._obs = None
+        self._limit = limit
 
     def _simulate(self):
         action, _ = self._model.predict(self._obs)
@@ -20,10 +22,12 @@ class PolicyVisualizer:
 
     def visualize(self, horizon: int = 1000) -> None:
         try:
-            while True:  # Keep running until interrupted
+            iteration = 0
+            while iteration < self._limit:  # Keep running until interrupted
                 self._obs = self._env.reset()
                 positions = [self._simulate() for _ in range(horizon)]
                 self._renderer.render(np.array(positions))
+                iteration += 1
 
         except KeyboardInterrupt:  # Handle interruption
             print("Visualization stopped.")
@@ -41,3 +45,16 @@ class ValueFunction:
         state_value = values.item()
 
         return state_value
+
+
+class VisualizePolicyCallback(EvalCallback):
+    def __int__(self, eval_env, xml_path, **kwargs):
+        super().__init__(eval_env, **kwargs)
+        self._visualizer = PolicyVisualizer(self.model, self.eval_env, xml_path)
+
+    def on_step(self) -> bool:
+        res = super().on_step()
+        if self.eval_freq > 0 and self.n_calls % self.eval_freq == 0:
+            self._visualizer.visualize()
+
+        return res

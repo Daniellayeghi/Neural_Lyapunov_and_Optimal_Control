@@ -34,7 +34,8 @@ configurations = {
                 'velocity': (-3, 3)
             },
             'terminal_time': 300
-        }
+        },
+        'xml_path': './xmls/doubleintegrator.xml'
     },
     'DI_SAC': {
         'model_type': CustomDoubleIntegrator,
@@ -68,7 +69,8 @@ configurations = {
                 'velocity': (-3, 3)
             },
             'terminal_time': 300
-        }
+        },
+        'xml_path': './xmls/doubleintegrator.xml'
     },
     'TL_PPO': {
         'model_type': CustomReacher,
@@ -110,7 +112,8 @@ configurations = {
                 'velocity': (0, 0)
             },
             'terminal_time': 300
-        }
+        },
+        'xml_path': './xmls/reahcer.xml'
     },
     'TL_SAC': {
         'model_type':CustomReacher,
@@ -144,7 +147,8 @@ configurations = {
                 'velocity': (0, 0)
             },
             'terminal_time': 300
-        }
+        },
+        'xml_path': './xmls/reahcer.xml'
     },
     'CP_BALANCE_PPO': {
         'model_type': CustomCartpole,
@@ -186,7 +190,8 @@ configurations = {
                 'velocity': (0, 0)
             },
             'terminal_time': 300
-        }
+        },
+        'xml_path': './xmls/cartpole.xml'
     },
     'CP_BALANCE_SAC': {
         'model_type': CustomCartpole,
@@ -223,6 +228,7 @@ configurations = {
             'terminal_time': 300
         }
     },
+    'xml_path': './xmls/cartpole.xml'
 }
 
 

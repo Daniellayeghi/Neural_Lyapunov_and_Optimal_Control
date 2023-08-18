@@ -20,7 +20,7 @@ class PolicyVisualizer:
         pos_size = self._obs.flatten().shape[0] // 2
         return self._obs.flatten()[:pos_size]
 
-    def visualize(self, horizon: int = 1000) -> None:
+    def visualize(self, horizon: int = 600) -> None:
         try:
             iteration = 0
             while iteration < self._limit:  # Keep running until interrupted
@@ -48,13 +48,22 @@ class ValueFunction:
 
 
 class VisualizePolicyCallback(EvalCallback):
-    def __int__(self, eval_env, xml_path, **kwargs):
+    def __init__(self, eval_env, xml_path, visualize_nth, **kwargs):
         super().__init__(eval_env, **kwargs)
-        self._visualizer = PolicyVisualizer(self.model, self.eval_env, xml_path)
+        self._visualizer = None
+        self._vnth = visualize_nth
+        if xml_path is None:
+            raise ValueError("xml_path is required for VisualEvalCallback.")
+        self._xml_path = xml_path
 
-    def on_step(self) -> bool:
-        res = super().on_step()
-        if self.eval_freq > 0 and self.n_calls % self.eval_freq == 0:
-            self._visualizer.visualize()
+    @property
+    def visualizer(self):
+        if self._visualizer is None:
+            self._visualizer = PolicyVisualizer(self.model, self.eval_env, self._xml_path, limit=1)
+        return self._visualizer
 
+    def _on_step(self) -> bool:
+        res = super()._on_step()
+        if self.eval_freq > 0 and self.n_calls % (self.eval_freq * self._vnth) == 0:
+            self.visualizer.visualize()
         return res

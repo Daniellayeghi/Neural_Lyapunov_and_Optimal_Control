@@ -194,6 +194,7 @@ configurations = {
         'xml_path': './xmls/cartpole.xml'
     },
     'CP_BALANCE_SAC': {
+        'xml_path': './xmls/cartpole.xml',
         'model_type': CustomCartpole,
         'env_name': 'Custom Reacher SAC',
         'epochs': 100,
@@ -228,7 +229,6 @@ configurations = {
             'terminal_time': 300
         }
     },
-    'xml_path': './xmls/cartpole.xml'
 }
 
 

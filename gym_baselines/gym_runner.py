@@ -38,8 +38,8 @@ def _initialize_model(algorithm, envs, hyperparameters):
 
 
 def _run_learning_process(model, total_timesteps, eval_env, tb_name, eval_freq, xml_path):
-    eval_callback = VisualizePolicyCallback(eval_env, xml_path, log_path=tb_name, eval_freq=eval_freq,
-                                            n_eval_episodes=5)
+    kwargs = {'log_path': tb_name, 'eval_freq': eval_freq, 'n_eval_episodes': 5}
+    eval_callback = VisualizePolicyCallback(eval_env, xml_path, 10, **kwargs)
     model.learn(total_timesteps=total_timesteps, callback=eval_callback)
 
 

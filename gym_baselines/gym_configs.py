@@ -197,8 +197,8 @@ configurations = {
         'xml_path': './xmls/cartpole.xml',
         'model_type': CustomCartpole,
         'env_name': 'Custom Reacher SAC',
-        'epochs': 100,
-        'terminal_time': 300,
+        'epochs': 250,
+        'terminal_time': 100,
         'nproc': 6,
         'hyperparameters': {
             'batch_size': 256,
@@ -226,7 +226,7 @@ configurations = {
                 'position': (-.6, .6),
                 'velocity': (0, 0)
             },
-            'terminal_time': 300
+            'terminal_time': 100
         }
     },
 }

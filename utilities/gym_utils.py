@@ -16,16 +16,17 @@ class PolicyVisualizer:
     def _simulate(self):
         action, _ = self._model.predict(self._obs)
         res = self._env.step(action)
+        reset = res[-2][0]
         self._obs = res[0]
         pos_size = self._obs.flatten().shape[0] // 2
-        return self._obs.flatten()[:pos_size]
+        return self._obs.flatten()[:pos_size], reset
 
     def visualize(self, horizon: int = 600) -> None:
         try:
             iteration = 0
             while iteration < self._limit:  # Keep running until interrupted
                 self._obs = self._env.reset()
-                positions = [self._simulate() for _ in range(horizon)]
+                positions = [pos for pos, reset in [self._simulate() for _ in range(horizon)] if not reset]
                 self._renderer.render(np.array(positions))
                 iteration += 1
 

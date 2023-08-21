@@ -118,7 +118,7 @@ def batch_state_loss(x: torch.Tensor):
     x = batch_state_encoder(x)
     t, nsim, r, c = x.shape
     x_run = x[:-4, :, :, :].view(t-4, nsim, r, c).clone()
-    x_final = x[-4:-1, :, :, :].view(3, nsim, r, c).clone()
+    x_final = x[-4:, :, :, :].view(4, nsim, r, c).clone()
     l_running = (loss_quadratic(x_run, Q)).squeeze()
     l_terminal = loss_quadratic(x_final, Qf).squeeze()
 
@@ -152,12 +152,14 @@ def batch_inv_dynamics_loss(x, acc, alpha):
 
 
 def loss_function(x, acc, alpha=1):
-    l_run = torch.sum(batch_inv_dynamics_loss(x, acc, alpha).squeeze() + batch_state_loss(x), dim=0)
+    l_run_ctrl = torch.sum(batch_inv_dynamics_loss(x, acc, alpha).squeeze(), dim=0)
+    l_run_state = torch.sum(batch_state_loss(x).squeeze(), dim=0)
+    l_run = l_run_state + l_run_ctrl
     l_bellman = backup_loss(x)
     l_terminal = 100 * value_terminal_loss(x)
     l_nsd = torch.mean(torch.square(NSD_loss(x))) * 100
     loss = torch.mean(l_run + l_bellman + l_terminal)
-    return torch.maximum(loss, torch.zeros_like(loss)) + l_nsd
+    return torch.maximum(loss, torch.zeros_like(loss)) + l_nsd*0
 
 cartpole.GEAR = 1
 cartpole.LENGTH = 0.3

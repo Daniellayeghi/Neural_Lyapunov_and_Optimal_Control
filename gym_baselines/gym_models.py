@@ -141,13 +141,13 @@ class CustomCartpole(CustomEnv):
         self._g, self._gear = -9.81, 1
         self._fr = np.array([0, .1]).reshape(2, 1)
         self._Q = np.diag(np.array([5, 25, 0.5, .1]))
-        self._R = np.array([[0.01]])
+        self._R = np.array([[0.5]])
         self._dt = .01
         self.retrun_state = return_state
         self.state = np.zeros(4)
 
     def _get_reward(self, state, u):
-        return -(state.T @ self._Q @ state + u.T @ self._R @ u)
+        return -(state.T @ self._Q @ state + u.T @ self._reg @ u)
 
     def _enc_state(self):
         qc, qp, qdc, qdp = self.state
@@ -165,6 +165,7 @@ class CustomCartpole(CustomEnv):
         C = np.array([0, -m_p * l * qdp * np.sin(qp), 0, 0]).reshape(2, 2)
         Tg = np.array([0, -m_p * g * l * np.sin(qp)]).reshape(2, 1)
         B = np.array([1, 0]).reshape(2, 1)
+        self._reg = np.linalg.inv(np.array([[M[0, 0]]]))
 
         qdd = (np.linalg.inv(M) @ (-C @ qd - self._fr * qd + Tg + B * u)).flatten()
         qddc, qddp = qdd[0], qdd[1]

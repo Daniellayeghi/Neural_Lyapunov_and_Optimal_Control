@@ -130,9 +130,11 @@ def value_terminal_loss(x: torch.Tensor):
 
 
 def loss_function(x, acc, alpha=1):
-    l_run = torch.sum(batch_inv_dynamics_loss(x, acc, alpha) + batch_state_loss(x), dim=0)
+    l_run_ctrl = torch.sum(batch_inv_dynamics_loss(x, acc, alpha).squeeze(), dim=0)
+    l_run_state = torch.sum(batch_state_loss(x).squeeze(), dim=0)
+    l_run = l_run_state + l_run_ctrl
     l_bellman = backup_loss(x)
-    l_terminal = 1000 * value_terminal_loss(x)
+    l_terminal = 1 * value_terminal_loss(x)
     return torch.mean(torch.square(l_run + l_bellman + l_terminal))
 
 init_lr = 8e-2

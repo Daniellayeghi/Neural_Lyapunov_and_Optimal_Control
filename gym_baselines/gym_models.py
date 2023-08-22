@@ -140,7 +140,7 @@ class CustomCartpole(CustomEnv):
         self._mass_p, self._mass_c, self._l = .1, 1, .3
         self._g, self._gear = -9.81, 1
         self._fr = np.array([0, .1]).reshape(2, 1)
-        self._Q = np.diag(np.array([5, 25, 0.5, .1]))
+        self._Q = np.diag(np.array([25, 25, 0.5, .1]))
         self._R = np.array([[0.5]])
         self._dt = .01
         self.retrun_state = return_state

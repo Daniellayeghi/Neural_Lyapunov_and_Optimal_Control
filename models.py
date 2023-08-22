@@ -142,7 +142,7 @@ class Cartpole(BaseRBD):
         self._L = torch.ones((nsims, 1, 1)).to(device) * self.LENGTH
         self._Mp = torch.ones((nsims, 1, 1)).to(device) * self.MASS_P
         self._Mc = torch.ones((nsims, 1, 1)).to(device) * self.MASS_C
-        self._b = torch.diag(torch.Tensor([1, 0])).repeat(nsims, 1, 1).to(device)
+        self._b = torch.Tensor([1, 0]).repeat(nsims, 1, 1).to(device)
         self.simulate_REG = self.REG
 
     def _Muact(self, q):
@@ -202,7 +202,7 @@ class Cartpole(BaseRBD):
             Tp = self._Tbias(x)
             Tfric = self._Tfric(qd)
             B = self._Bvec()
-            qdd = (Minv @ (Tp - Tfric + tau).mT).mT
+            qdd = (Minv @ (Tp - Tfric + B * tau).mT).mT
             xd = torch.cat((qd[:, :, 0:self._params.nx], qdd), 2).clone()
             return xd
         else:

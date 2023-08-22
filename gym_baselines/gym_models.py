@@ -144,6 +144,7 @@ class CustomCartpole(CustomEnv):
         self._R = np.array([[0.01]])
         self._dt = .01
         self.retrun_state = return_state
+        self.state = np.zeros(4)
 
     def _get_reward(self, state, u):
         return -(state.T @ self._Q @ state + u.T @ self._R @ u)

@@ -42,12 +42,18 @@ class ProjectedDynamicalSystem(nn.Module):
             self._ctrl = self.project
         if mode == 'fwd':
             def underactuated_fwd_policy(q, v, x, Vx):
+                # This function computes the HJB policy for force/torque based control
+                # using the dynamics -> qdd = M_inv * (T_bias + Bu) where df/du = dxd/du and not dqdd/du
                 dfdu_top = torch.zeros((sim_params.nsim, sim_params.nv, sim_params.nu)).to(device)
                 M = self._dynamics._Mfull(q)
                 Minv = torch.inverse(M)
                 B = self._dynamics._Bvec()
-                dfdu = torch.cat((dfdu_top, (-Minv @ B.mT).mT), dim=1)
-                return -0.5 * self._scale * (M @ dfdu.mT @ Vx.mT).mT
+                # TODO For some reason the -Minv which is wrong I think. At times performs better
+                # dfdu = torch.cat((dfdu_top, (-Minv @ B.mT).mT), dim=1)
+                # return -0.5 * self._scale * (M @ dfdu.mT @ Vx.mT).mT
+                dfdu = torch.cat((dfdu_top, (Minv @ B.mT)), dim=1)
+                reg = self._dynamics._M_reg(q)
+                return -0.5 * self._scale * (reg @ dfdu.mT @ Vx.mT).mT
 
             self._policy = underactuated_fwd_policy
             self._ctrl = self.hjb

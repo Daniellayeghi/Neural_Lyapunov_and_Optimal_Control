@@ -17,14 +17,14 @@ torch.manual_seed(seed)
 
 wandb.init(project='CP_balancing', anonymous="allow")
 
-sim_params = SimulationParams(6, 4, 2, 2, 2, 1, 100, 100, 0.008)
+sim_params = SimulationParams(6, 4, 2, 2, 1, 1, 100, 100, 0.008)
 cp_params = ModelParams(2, 2, 1, 4, 4)
-max_iter, max_time, alpha, dt, discount, step, scale, mode = 31, 146, .5, 0.008, 20, .005, 10, 'fwd'
+max_iter, max_time, alpha, dt, discount, step, scale, mode = 61, 146, .5, 0.008, 20, .005, 2, 'fwd'
 Q = torch.diag(torch.Tensor([25, 25, 0.5, .1])).repeat(sim_params.nsim, 1, 1).to(device)
-R = torch.diag(torch.Tensor([0.0001])).repeat(sim_params.nsim, 1, 1).to(device)
+R = torch.diag(torch.Tensor([0.001])).repeat(sim_params.nsim, 1, 1).to(device)
 Qf = torch.diag(torch.Tensor([25, 25, 0.5, .1])).repeat(sim_params.nsim, 1, 1).to(device)
 lambdas = torch.ones((sim_params.ntime-0, sim_params.nsim, 1, 1))
-cartpole = Cartpole(sim_params.nsim, cp_params, device, mode='inv')
+cartpole = Cartpole(sim_params.nsim, cp_params, device, mode='fwd')
 renderer = MjRenderer("./xmls/cartpole.xml", 0.0001)
 
 

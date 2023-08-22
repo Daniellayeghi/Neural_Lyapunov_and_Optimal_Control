@@ -54,6 +54,9 @@ class BaseRBD(object):
     def _INVreg(self, x):
         pass
 
+    def _M_reg(self, x):
+        pass
+
     def inverse_dynamics(self, x, acc):
         q, qd = x[:, :, :self._params.nq].clone(), x[:, :, self._params.nq:].clone()
         M = self._Mfull(q)
@@ -93,6 +96,9 @@ class DoubleIntegrator(BaseRBD):
         super(DoubleIntegrator, self).__init__(nsims, params, device, mode)
         self._M = torch.ones((nsims, 1, 1)).to(device) * self.MASS
         self._b = torch.diag(torch.Tensor([1])).repeat(nsims, 1, 1).to(device)
+
+    def _M_reg(self, q):
+        return self.MASS * torch.ones_like(q)
 
     def _Muact(self, q):
         return None
@@ -144,6 +150,9 @@ class Cartpole(BaseRBD):
         self._Mc = torch.ones((nsims, 1, 1)).to(device) * self.MASS_C
         self._b = torch.Tensor([1, 0]).repeat(nsims, 1, 1).to(device)
         self.simulate_REG = self.REG
+
+    def _M_reg(self, q):
+        return self._Mact(q)[:, 0, 0].reshape(q.shape[0], 1, 1)
 
     def _Muact(self, q):
         qc, qp = q[:, :, 0].unsqueeze(1).clone(), q[:, :, 1].unsqueeze(1).clone()
@@ -259,6 +268,9 @@ class TwoLink2(BaseRBD):
     def __init__(self, nsims, params: ModelParams, device, mode='inv'):
         super(TwoLink2, self).__init__(nsims, params, device, mode)
         self._b = torch.diag(torch.Tensor([1, 1])).repeat(nsims, 1, 1).to(device)
+
+    def _M_reg(self, q):
+        return self._Mfull(q)
 
     def _Mact(self, q):
         return self._Ms(q)[1]

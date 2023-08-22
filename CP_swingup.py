@@ -17,9 +17,9 @@ seed = args.seed
 random.seed(seed)
 wandb.init(project='CP_swingup', anonymous="allow")
 torch.manual_seed(seed)
-sim_params = SimulationParams(6, 4, 2, 2, 2, 1, 200, 240, 0.01)
+sim_params = SimulationParams(6, 4, 2, 2, 1, 1, 200, 240, 0.01)
 cp_params = ModelParams(2, 2, 1, 4, 4)
-max_iter, max_time, alpha, dt, n_bins, discount, step, scale, mode = 101, 241, .5, 0.01, 3, 1, 15, 10, 'fwd'
+max_iter, max_time, alpha, dt, n_bins, discount, step, scale, mode = 101, 241, .5, 0.01, 3, 1, 15, 1, 'fwd'
 Q = torch.diag(torch.Tensor([.05, 5, .1, .1])).repeat(sim_params.nsim, 1, 1).to(device)
 R = torch.diag(torch.Tensor([0.0001])).repeat(sim_params.nsim, 1, 1).to(device)
 Qf = torch.diag(torch.Tensor([5, 300, 10, 10])).repeat(sim_params.nsim, 1, 1).to(device)

@@ -179,11 +179,11 @@ class CustomCartpole(CustomEnv):
 
         terminate = self._terminated()
 
-        if terminate:
-            self.reward *= 1000
+        # if terminate:
+        #     self.reward *= 1000
 
         return self.state, self.reward, terminate, terminate, {}
 
     def _terminated(self):
-        out_of_bounds = np.abs(self.state[1]) > 0.75
-        return self._iter >= self._terminal_time or out_of_bounds
+        # out_of_bounds = np.abs(self.state[1]) > 0.75
+        return self._iter >= self._terminal_time

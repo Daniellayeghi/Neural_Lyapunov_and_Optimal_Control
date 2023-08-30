@@ -95,8 +95,8 @@ def loss_quadratic(x, gain):
 
 def backup_loss(x: torch.Tensor):
     t, nsim, r, c = x.shape
-    x_final = x[-1, :, :, :].view(1, nsim, r, c).clone()
-    x_init = x[0, :, :, :].view(1, nsim, r, c).clone()
+    x_final = x[-1].view(1, nsim, r, c).clone()
+    x_init = x[0].view(1, nsim, r, c).clone()
     x_final_w = batch_state_encoder(x_final).reshape(nsim, r, c)
     x_init_w = batch_state_encoder(x_init).reshape(nsim, r, c)
     value_final = nn_value_func(0, x_final_w).squeeze()
@@ -117,8 +117,8 @@ def NSD_loss(x: torch.Tensor):
 def batch_state_loss(x: torch.Tensor):
     x = batch_state_encoder(x)
     t, nsim, r, c = x.shape
-    x_run = x[:-4, :, :, :].view(t-4, nsim, r, c).clone()
-    x_final = x[-4:, :, :, :].view(4, nsim, r, c).clone()
+    x_run = x[:-4].view(t-4, nsim, r, c).clone()
+    x_final = x[-4:].view(4, nsim, r, c).clone()
     l_running = (loss_quadratic(x_run, Q)).squeeze()
     l_terminal = loss_quadratic(x_final, Qf).squeeze()
 
@@ -167,7 +167,7 @@ cartpole.MASS_P = 0.1
 cartpole.FRICTION = torch.Tensor([0.0, 0.1]).to(device)
 
 dyn_system = ProjectedDynamicalSystem(
-    nn_value_func, loss_func, sim_params, encoder=state_encoder, dynamics=cartpole, mode=mode, step=step, scale=scale, R=R
+    nn_value_func, loss_func, sim_params, encoder=state_encoder, dynamics=cartpole, mode=mode, step=step, scale=scale,
 ).to(device)
 time = torch.linspace(0, (sim_params.ntime - 1) * dt, sim_params.ntime).to(device)
 one_step = torch.linspace(0, dt, 2).to(device)

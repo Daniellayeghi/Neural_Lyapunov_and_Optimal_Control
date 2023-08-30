@@ -9,7 +9,6 @@ import wandb
 from utilities.mj_renderer import *
 import argparse
 
-
 parser = argparse.ArgumentParser(description='Seed input')
 parser.add_argument('--seed', type=int, default=4, help='Random seed')
 args = parser.parse_args()
@@ -22,7 +21,7 @@ cp_params = ModelParams(2, 2, 1, 4, 4)
 max_iter, max_time, alpha, dt, n_bins, discount, step, scale, mode = 101, 241, .5, 0.01, 3, 1, 15, 1, 'fwd'
 Q = torch.diag(torch.Tensor([.25, 10, .0025, .04])).repeat(sim_params.nsim, 1, 1).to(device)
 R = torch.diag(torch.Tensor([1])).repeat(sim_params.nsim, 1, 1).to(device)
-Qf = torch.diag(torch.Tensor([200, 4800, 4, 48])).repeat(sim_params.nsim, 1, 1).to(device)
+Qf = torch.diag(torch.Tensor([40, 300, .4, 3])).repeat(sim_params.nsim, 1, 1).to(device)
 lambdas = torch.ones((sim_params.ntime-2, sim_params.nsim, 1, 1))
 cartpole = Cartpole(sim_params.nsim, cp_params, mode='fwd', device=device)
 cartpole.FRICTION = torch.Tensor([0.0, 0.1]).to(device)
@@ -32,7 +31,6 @@ renderer = MjRenderer("./xmls/cartpole.xml", 0.0001)
 def build_discounts(lambdas: torch.Tensor, discount: float):
     for i in range(lambdas.shape[0]):
         lambdas[i, :, :, :] *= (discount)**i
-
     return lambdas.clone()
 
 
@@ -71,9 +69,8 @@ class NNValueFunction(nn.Module):
 
     def forward(self, t, x):
         nsim = x.shape[0]
-        if len(t.shape) == 0:
-            t = torch.ones((nsim, 1, 1)).to(x.device) * t
-        aug_x = torch.cat((x, t), dim=2)
+        time = torch.ones((nsim, 1, 1)).to(x.device) * t
+        aug_x = torch.cat((x, time), dim=2)
         return self.nn(aug_x)
 
 
@@ -93,15 +90,7 @@ def loss_func(x: torch.Tensor):
 nn_value_func = NNValueFunction(sim_params.nqv).to(device)
 
 
-def value_diff_loss(x: torch.Tensor, time):
-    x_w = batch_state_encoder(x)
-    x_w = x_w.reshape(x_w.shape[0]*x_w.shape[1], x_w.shape[2],  x_w.shape[3])
-    time = time.reshape(time.shape[0]*time.shape[1], time.shape[2],  time.shape[3])
-    values = nn_value_func(time, x_w).squeeze().reshape(x.shape[0], x.shape[1])
-    value_differences = values[1:] - values[:-1]
-
-    return value_differences.squeeze()
-
+def backup_loss(x: torch.Tensor):
     t, nsim, r, c = x.shape
     x_final = x[-1].view(1, nsim, r, c).clone()
     x_init = x[0].view(1, nsim, r, c).clone()
@@ -111,7 +100,6 @@ def value_diff_loss(x: torch.Tensor, time):
     value_init = nn_value_func((sim_params.ntime - 1) * dt, x_init_w).squeeze()
 
     return (-value_init + value_final).squeeze()
-
 
 def batch_state_loss(x: torch.Tensor):
     x = batch_state_encoder(x)
@@ -137,32 +125,33 @@ def batch_inv_dynamics_loss(x, acc, alpha):
     C = cartpole._Tbias(x_reshape).reshape((x.shape[0], x.shape[1], 1, sim_params.nv))
     Tf = cartpole._Tfric(v).reshape((x.shape[0], x.shape[1], 1, sim_params.nv))
     u_batch = ((M @ acc.mT).mT - C + Tf) * cartpole._b
-    return (u_batch @ torch.linalg.inv(M) @ u_batch.mT / scale).squeeze()
+    reg = torch.linalg.inv(M)/scale
+    return (u_batch @ reg @ u_batch.mT).squeeze()
 
 
 def value_terminal_loss(x: torch.Tensor):
     t, nsim, r, c = x.shape
     x_final = x[-1].view(1, nsim, r, c).clone()
     x_final_w = batch_state_encoder(x_final).reshape(nsim, r, c)
-    value_final = nn_value_func(torch.tensor(0.0), x_final_w).squeeze()
+    value_final = nn_value_func(0, x_final_w).squeeze()
     return value_final.squeeze()
 
 
 def loss_function(x, xd, alpha=1):
     x_running, acc_running = x[:-1].clone(), xd[:-1, ..., sim_params.nv:].clone()
-    l_run_ctrl = batch_inv_dynamics_loss(x_running, acc_running, alpha) * 0
-    l_run_state = batch_state_loss(x_running)
-    l_value_diff = value_diff_loss(x, time_input)
-    l_backup = torch.sum(l_run_state + l_run_ctrl + l_value_diff, dim=0)
+
+    l_run_ctrl = torch.sum(batch_inv_dynamics_loss(x_running, acc_running, alpha), dim=0)
+    l_run_state = torch.sum(batch_state_loss(x_running), dim=0)
+    l_run = l_run_state + l_run_ctrl * 0
+    l_bellman = backup_loss(x)
     l_terminal = 0 * value_terminal_loss(x)
-    return torch.mean(torch.square(l_backup + l_terminal))
+    return torch.mean(torch.square(l_run + l_bellman + l_terminal))
 
 
 dyn_system = ProjectedDynamicalSystem(
     nn_value_func, loss_func, sim_params,
     encoder=state_encoder, dynamics=cartpole, mode=mode, step=step, scale=scale
 ).to(device)
-
 
 time = torch.linspace(0, (sim_params.ntime - 1) * dt, sim_params.ntime).to(device)
 time_input = time.clone().reshape(time.shape[0], 1, 1, 1).repeat(1, sim_params.nsim, 1, 1).requires_grad_(True)

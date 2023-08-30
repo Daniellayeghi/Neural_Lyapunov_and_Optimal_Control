@@ -206,6 +206,7 @@ class Cartpole(BaseRBD):
 
     def __call__(self, x, tau):
         if self._mode == 'fwd':
+            # tau = torch.clamp(tau, -1, 1)
             q, qd = x[:, :, :self._params.nq].clone(), x[:, :, self._params.nq:].clone()
             Minv = torch.linalg.inv(self._Mfull(q))
             Tp = self._Tbias(x)

@@ -34,9 +34,14 @@ class ProjectedDynamicalSystem(nn.Module):
         self._scale = scale
         self.step = step
         self._step_func = self._dynamics
+        self._R = R
         self.collect = True
-
         self._policy = None
+
+        if R is None:
+            self._reg_func = lambda q: self._dynamics._M_reg(q)
+        else:
+            self._reg_func = lambda q: torch.inverse(R)
 
         if mode == 'proj':
             self._ctrl = self.project
@@ -52,7 +57,7 @@ class ProjectedDynamicalSystem(nn.Module):
                 # dfdu = torch.cat((dfdu_top, (-Minv @ B.mT).mT), dim=1)
                 # return -0.5 * self._scale * (M @ dfdu.mT @ Vx.mT).mT
                 dfdu = torch.cat((dfdu_top, (Minv @ B.mT)), dim=1)
-                reg = self._dynamics._M_reg(q)
+                reg = self._reg_func(q) * self._scale
                 return -0.5 * self._scale * (reg @ dfdu.mT @ Vx.mT).mT
 
             self._policy = underactuated_fwd_policy

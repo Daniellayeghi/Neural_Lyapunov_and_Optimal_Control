@@ -19,12 +19,13 @@ wandb.init(project='CP_swingup', anonymous="allow")
 torch.manual_seed(seed)
 sim_params = SimulationParams(6, 4, 2, 2, 1, 1, 200, 240, 0.01)
 cp_params = ModelParams(2, 2, 1, 4, 4)
-max_iter, max_time, alpha, dt, n_bins, discount, step, scale, mode = 101, 241, .5, 0.01, 3, 1, 15, 1, 'fwd'
-Q = torch.diag(torch.Tensor([.25, 10, .0025, .04])).repeat(sim_params.nsim, 1, 1).to(device)
+max_iter, max_time, alpha, dt, n_bins, discount, step, scale, mode = 101, 241, .5, 0.01, 3, 1, 15, 10, 'fwd'
+Q = torch.diag(torch.Tensor([.0025, 80, .0025, .000025])).repeat(sim_params.nsim, 1, 1).to(device)
 R = torch.diag(torch.Tensor([1])).repeat(sim_params.nsim, 1, 1).to(device)
-Qf = torch.diag(torch.Tensor([200, 4800, 4, 48])).repeat(sim_params.nsim, 1, 1).to(device)
+Qf = torch.diag(torch.Tensor([20, 4800, .2, 48])).repeat(sim_params.nsim, 1, 1).to(device)
 lambdas = torch.ones((sim_params.ntime-2, sim_params.nsim, 1, 1))
 cartpole = Cartpole(sim_params.nsim, cp_params, mode='fwd', device=device)
+cartpole.GEAR = 1
 cartpole.FRICTION = torch.Tensor([0.0, 0.1]).to(device)
 renderer = MjRenderer("./xmls/cartpole.xml", 0.0001)
 
@@ -136,7 +137,7 @@ def batch_inv_dynamics_loss(x, acc, alpha):
     M = cartpole._Mfull(q).reshape((x.shape[0], x.shape[1], sim_params.nv, sim_params.nv))
     C = cartpole._Tbias(x_reshape).reshape((x.shape[0], x.shape[1], 1, sim_params.nv))
     Tf = cartpole._Tfric(v).reshape((x.shape[0], x.shape[1], 1, sim_params.nv))
-    u_batch = ((M @ acc.mT).mT - C + Tf) * cartpole._b
+    u_batch = ((M @ acc.mT).mT - C + Tf) * cartpole._Bvec()
     return (u_batch @ torch.linalg.inv(M) @ u_batch.mT / scale).squeeze()
 
 
@@ -150,7 +151,7 @@ def value_terminal_loss(x: torch.Tensor):
 
 def loss_function(x, xd, alpha=1):
     x_running, acc_running = x[:-1].clone(), xd[:-1, ..., sim_params.nv:].clone()
-    l_run_ctrl = batch_inv_dynamics_loss(x_running, acc_running, alpha) * 0
+    l_run_ctrl = batch_inv_dynamics_loss(x_running, acc_running, alpha) * 1
     l_run_state = batch_state_loss(x_running)
     l_value_diff = value_diff_loss(x, time_input)
     l_backup = torch.sum(l_run_state + l_run_ctrl + l_value_diff, dim=0)

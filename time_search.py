@@ -31,7 +31,7 @@ def optimal_time(init_time, max_time, dt, loss_func, x_init, func, init_loss):
         time = torch.linspace(0, (time - 1) * dt, time).to(device)
         time_input = time.clone().reshape(time.shape[0], 1, 1, 1).repeat(1, x_init.shape[0], 1, 1).requires_grad_(True)
         y, dydt = odeint(func, x_init, time, method='euler', options=dict(step_size=dt))
-        return loss_func(y, dydt, time_input)
+        return loss_func(y, dydt, time_input)[0]
 
     def criteria(loss):
         return loss < init_loss

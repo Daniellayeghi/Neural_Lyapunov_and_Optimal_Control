@@ -19,10 +19,10 @@ wandb.init(project='CP_swingup', anonymous="allow")
 torch.manual_seed(seed)
 sim_params = SimulationParams(6, 4, 2, 2, 1, 1, 200, 140, 0.01)
 cp_params = ModelParams(2, 2, 1, 4, 4)
-max_iter, max_time, alpha, dt, n_bins, discount, step, scale, mode = 121, 250, .5, 0.01, 3, 1, 15, 10, 'fwd'
+max_iter, max_time, alpha, dt, n_bins, discount, step, scale, mode = 121, 172, .5, 0.01, 3, 1, 15, 10, 'fwd'
 Q = torch.diag(torch.Tensor([.0, 0, .0, .0])).repeat(sim_params.nsim, 1, 1).to(device)
 R = torch.diag(torch.Tensor([0.0001])).repeat(sim_params.nsim, 1, 1).to(device)
-Qf = torch.diag(torch.Tensor([80, 300, .8, 3])).repeat(sim_params.nsim, 1, 1).to(device)
+Qf = torch.diag(torch.Tensor([80, 600, .8, 4.5])).repeat(sim_params.nsim, 1, 1).to(device)
 lambdas = torch.ones((25, sim_params.nsim, 1, 1))
 cartpole = Cartpole(sim_params.nsim, cp_params, mode='fwd', device=device)
 cartpole.GEAR = 1
@@ -146,7 +146,7 @@ def loss_function(x, xd, batch_time, alpha=1):
     l_backup = torch.square((l_run_state + l_run_ctrl)*dt + l_value_diff)
     l_backup = torch.sum(l_backup, dim=0)
     l_terminal = 0 * torch.square(value_terminal_loss(x))
-    return torch.mean(l_backup + l_terminal)
+    return torch.mean(l_backup + l_terminal), l_backup + l_terminal
 
 
 dyn_system = ProjectedDynamicalSystem(
@@ -159,13 +159,14 @@ time = torch.linspace(0, (sim_params.ntime - 1) * dt, sim_params.ntime).to(devic
 time_input = time.clone().reshape(time.shape[0], 1, 1, 1).repeat(1, sim_params.nsim, 1, 1).requires_grad_(True)
 one_step = torch.linspace(0, dt, 2).to(device)
 optimizer = torch.optim.AdamW(dyn_system.parameters(), lr=4e-3, amsgrad=True)
-lr = lr_scheduler.MultiStepLR(optimizer, milestones=[50, 60], gamma=0.2)
+
+lr = lr_scheduler.MultiStepLR(optimizer, milestones=[50, 60, 70, 80], gamma=0.5)
 lambdas = build_discounts(lambdas, discount).to(device)
 
 
 log = f"fwd_CP_TO_m-{mode}_d-{discount}_s-{step}_seed_{seed}"
 wandb.watch(dyn_system, loss_function, log="all")
-
+total_time_steps = 0
 
 if __name__ == "__main__":
     def get_lr(optimizer):
@@ -173,7 +174,11 @@ if __name__ == "__main__":
             return param_group['lr']
 
     qc_init = torch.FloatTensor(sim_params.nsim, 1, 1).uniform_(0, 0) * 2
+    # Best under seed 4
     qp_init = torch.FloatTensor(sim_params.nsim, 1, 1).uniform_(torch.pi - 0.3, torch.pi + 0.3)
+    qp_init1 = torch.FloatTensor(sim_params.nsim//2, 1, 1).uniform_(torch.pi - 0.3, torch.pi)
+    qp_init2 = torch.FloatTensor(sim_params.nsim//2, 1, 1).uniform_(torch.pi, torch.pi + 0.3)
+    qp_init = torch.cat([qp_init1, qp_init2], dim=0)
     qd_init = torch.FloatTensor(sim_params.nsim, 1, sim_params.nv).uniform_(-1, 1) * 0
     x_init = torch.cat((qc_init, qp_init, qd_init), 2).to(device)
     iteration = 0
@@ -183,9 +188,10 @@ if __name__ == "__main__":
         optimizer.zero_grad()
         x_init = x_init[torch.randperm(sim_params.nsim)[:], :, :].clone()
         traj, dtraj_dt = odeint(dyn_system, x_init, time, method='euler', options=dict(step_size=dt))
-        loss = loss_function(traj, dtraj_dt, time_input, alpha)
+        loss, losses = loss_function(traj, dtraj_dt, time_input, alpha)
         loss.backward()
         sim_params.ntime, update = optimal_time(sim_params.ntime, max_time, dt, loss_function, x_init, dyn_system, loss)
+        total_time_steps += sim_params.ntime
         if update:
             time = torch.linspace(0, (sim_params.ntime - 1) * dt, sim_params.ntime).to(device).requires_grad_(True)
             time_input = time.clone().reshape(time.shape[0], 1, 1, 1).repeat(1, sim_params.nsim, 1, 1).requires_grad_(True)
@@ -193,15 +199,16 @@ if __name__ == "__main__":
         optimizer.step()
         lr.step(iteration)
         wandb.log({'epoch': iteration+1, 'loss': loss.item()})
-
-        print(f"Epochs: {iteration}, Loss: {loss.item()}, lr: {get_lr(optimizer)}, T: {sim_params.ntime}, Update: {update}\n")
+        print(f"Epochs: {iteration}, Loss: {loss.item()}, lr: {get_lr(optimizer)}, T: {sim_params.ntime}, Total time steps: {total_time_steps}, Update: {update}\n")
 
         if iteration % 20 == 0:
-            for i in range(0, sim_params.nsim, 30):
-                selection = random.randint(0, sim_params.nsim - 1)
-                renderer.render(traj[:, selection, 0, :sim_params.nq].cpu().detach().numpy())
+            indices = torch.randperm(sim_params.nsim-1 - 0)[:10]
+            # _, indices = torch.topk(losses, 10, largest=False)
+            for i in indices:
+                renderer.render(traj[:, i, 0, :sim_params.nq].cpu().detach().numpy())
 
         iteration += 1
 
     model_scripted = torch.jit.script(dyn_system.value_func.to('cpu'))  # Export to TorchScript
     model_scripted.save(f'{log}.pt')  # Save
+    wandb.finish()

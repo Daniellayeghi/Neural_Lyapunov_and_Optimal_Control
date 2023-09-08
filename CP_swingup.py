@@ -19,7 +19,7 @@ wandb.init(project='CP_swingup', anonymous="allow")
 torch.manual_seed(seed)
 sim_params = SimulationParams(6, 4, 2, 2, 1, 1, 200, 140, 0.01)
 cp_params = ModelParams(2, 2, 1, 4, 4)
-max_iter, max_time, alpha, dt, n_bins, discount, step, scale, mode = 121, 172, .5, 0.01, 3, 1, 15, 10, 'fwd'
+max_iter, max_time, alpha, dt, n_bins, discount, step, scale, mode = 300, 172, .5, 0.01, 3, 1, 15, 10, 'fwd'
 Q = torch.diag(torch.Tensor([.0, 0, .0, .0])).repeat(sim_params.nsim, 1, 1).to(device)
 R = torch.diag(torch.Tensor([0.0001])).repeat(sim_params.nsim, 1, 1).to(device)
 Qf = torch.diag(torch.Tensor([80, 600, .8, 4.5])).repeat(sim_params.nsim, 1, 1).to(device)
@@ -160,7 +160,10 @@ time_input = time.clone().reshape(time.shape[0], 1, 1, 1).repeat(1, sim_params.n
 one_step = torch.linspace(0, dt, 2).to(device)
 optimizer = torch.optim.AdamW(dyn_system.parameters(), lr=4e-3, amsgrad=True)
 
-lr = lr_scheduler.MultiStepLR(optimizer, milestones=[50, 60, 70, 80], gamma=0.5)
+from utilities.torch_utils import CustomLR
+custom_lr = CustomLR(optimizer=optimizer, halving_threshold=50)
+# lr = lr_scheduler.LambdaLR(optimizer, lr_lambda=custom_lr.lr_lambda)
+# lr = lr_scheduler.MultiStepLR(optimizer, milestones=[50, 60, 70, 80], gamma=0.5)
 lambdas = build_discounts(lambdas, discount).to(device)
 
 
@@ -174,7 +177,7 @@ if __name__ == "__main__":
             return param_group['lr']
 
     qc_init = torch.FloatTensor(sim_params.nsim, 1, 1).uniform_(0, 0) * 2
-    # Best under seed 4
+    # Best under seed
     qp_init = torch.FloatTensor(sim_params.nsim, 1, 1).uniform_(torch.pi - 0.3, torch.pi + 0.3)
     qp_init1 = torch.FloatTensor(sim_params.nsim//2, 1, 1).uniform_(torch.pi - 0.3, torch.pi)
     qp_init2 = torch.FloatTensor(sim_params.nsim//2, 1, 1).uniform_(torch.pi, torch.pi + 0.3)
@@ -196,10 +199,12 @@ if __name__ == "__main__":
             time = torch.linspace(0, (sim_params.ntime - 1) * dt, sim_params.ntime).to(device).requires_grad_(True)
             time_input = time.clone().reshape(time.shape[0], 1, 1, 1).repeat(1, sim_params.nsim, 1, 1).requires_grad_(True)
 
-        optimizer.step()
-        lr.step(iteration)
-        wandb.log({'epoch': iteration+1, 'loss': loss.item()})
         print(f"Epochs: {iteration}, Loss: {loss.item()}, lr: {get_lr(optimizer)}, T: {sim_params.ntime}, Total time steps: {total_time_steps}, Update: {update}\n")
+        wandb.log({'epoch': iteration+1, 'loss': loss.item()})
+
+        optimizer.step()
+        custom_lr.step(loss.item())
+        # lr.step(iteration)
 
         if iteration % 20 == 0:
             indices = torch.randperm(sim_params.nsim-1 - 0)[:10]

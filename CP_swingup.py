@@ -19,7 +19,7 @@ wandb.init(project='CP_swingup', anonymous="allow")
 torch.manual_seed(seed)
 sim_params = SimulationParams(6, 4, 2, 2, 1, 1, 200, 140, 0.01)
 cp_params = ModelParams(2, 2, 1, 4, 4)
-max_iter, max_time, alpha, dt, n_bins, discount, step, scale, mode = 300, 172, .5, 0.01, 3, 1, 15, 10, 'fwd'
+max_iter, max_time, alpha, dt, n_bins, discount, step, scale, mode = 130, 172, .5, 0.01, 3, 1, 15, 10, 'fwd'
 Q = torch.diag(torch.Tensor([.0, 0, .0, .0])).repeat(sim_params.nsim, 1, 1).to(device)
 R = torch.diag(torch.Tensor([0.0001])).repeat(sim_params.nsim, 1, 1).to(device)
 Qf = torch.diag(torch.Tensor([80, 600, .8, 4.5])).repeat(sim_params.nsim, 1, 1).to(device)
@@ -158,15 +158,13 @@ dyn_system = ProjectedDynamicalSystem(
 time = torch.linspace(0, (sim_params.ntime - 1) * dt, sim_params.ntime).to(device)
 time_input = time.clone().reshape(time.shape[0], 1, 1, 1).repeat(1, sim_params.nsim, 1, 1).requires_grad_(True)
 one_step = torch.linspace(0, dt, 2).to(device)
-optimizer = torch.optim.AdamW(dyn_system.parameters(), lr=4e-3, amsgrad=True)
+optimizer = torch.optim.AdamW(dyn_system.parameters(), lr=6e-3, amsgrad=True)
 
 from utilities.torch_utils import CustomLR
-custom_lr = CustomLR(optimizer=optimizer, halving_threshold=50)
+custom_lr = CustomLR(optimizer=optimizer, halving_threshold=50, gamma=0.5)
 # lr = lr_scheduler.LambdaLR(optimizer, lr_lambda=custom_lr.lr_lambda)
 # lr = lr_scheduler.MultiStepLR(optimizer, milestones=[50, 60, 70, 80], gamma=0.5)
 lambdas = build_discounts(lambdas, discount).to(device)
-
-
 log = f"fwd_CP_TO_m-{mode}_d-{discount}_s-{step}_seed_{seed}"
 wandb.watch(dyn_system, loss_function, log="all")
 total_time_steps = 0
@@ -207,8 +205,8 @@ if __name__ == "__main__":
         # lr.step(iteration)
 
         if iteration % 20 == 0:
-            indices = torch.randperm(sim_params.nsim-1 - 0)[:10]
-            # _, indices = torch.topk(losses, 10, largest=False)
+            # indices = torch.randperm(sim_params.nsim-1 - 0)[:10]
+            _, indices = torch.topk(losses, 10, largest=False)
             for i in indices:
                 renderer.render(traj[:, i, 0, :sim_params.nq].cpu().detach().numpy())
 

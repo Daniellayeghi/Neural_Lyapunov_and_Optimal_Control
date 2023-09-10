@@ -28,10 +28,12 @@ class ICNN(nn.Module):
             nn.init.uniform_(b, -bound, bound)
 
     def forward(self, t, x):
-        nsim, principal, dim = x.shape
+        shape = x.shape
+        nsim, dim = shape[0], shape[-1]
         x = x.reshape(nsim, dim)
-        time = torch.ones((nsim, 1)).to(x.device) * t
-        aug_x = torch.cat((x, time), dim=1)
+        if len(t.shape) == 0:
+            t = torch.ones((nsim, 1)).to(x.device) * t
+        aug_x = torch.cat((x, t), dim=1)
         if nsim > 1:
             aug_x.squeeze()
 

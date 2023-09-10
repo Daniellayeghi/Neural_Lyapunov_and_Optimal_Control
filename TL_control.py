@@ -21,7 +21,7 @@ tl_params = ModelParams(2, 2, 1, 4, 4)
 max_iter, max_time, alpha, dt, discount, step, scale, mode = 51, 300, .5, 0.01, 1.0, 15, 1, 'fwd'
 Q = torch.diag(torch.Tensor([1, 1, 0, 0])).repeat(sim_params.nsim, 1, 1).to(device)
 R = torch.diag(torch.Tensor([1, 1])).repeat(sim_params.nsim, 1, 1).to(device)
-Qf = torch.diag(torch.Tensor([10000, 10000, 100, 100])).repeat(sim_params.nsim, 1, 1).to(device)
+Qf = torch.diag(torch.Tensor([100, 100, 1, 1])).repeat(sim_params.nsim, 1, 1).to(device)
 lambdas = torch.ones((sim_params.ntime-0, sim_params.nsim, 1, 1))
 tl = TwoLink2(sim_params.nsim, tl_params, device)
 renderer = MjRenderer("./xmls/reacher.xml", dt=0.000001)
@@ -70,14 +70,15 @@ class NNValueFunction(nn.Module):
         self.nn.apply(init_weights)
 
     def forward(self, t, x):
-        time = torch.ones((sim_params.nsim, 1, 1)).to(device) * t
-        aug_x = torch.cat((x, time), dim=2)
+        nsim = x.shape[0]
+        if len(t.shape) == 0:
+            t = torch.ones((nsim, 1, 1)).to(x.device) * t
+        aug_x = torch.cat((x, t), dim=2)
         return self.nn(aug_x)
 
 
 def loss_quadratic(x, gain):
     return x @ gain @ x.mT
-
 
 def loss_func(x: torch.Tensor):
     x = state_encoder(x)
@@ -87,6 +88,15 @@ def loss_func(x: torch.Tensor):
 nn_value_func = NNValueFunction(sim_params.nqv).to(device)
 
 
+def value_diff_loss(x: torch.Tensor, time):
+    x_w = batch_state_encoder(x)
+    x_w = x_w.reshape(x_w.shape[0]*x_w.shape[1], x_w.shape[2],  x_w.shape[3])
+    time = time.reshape(time.shape[0]*time.shape[1], time.shape[2],  time.shape[3])
+    values = nn_value_func(time, x_w).squeeze().reshape(x.shape[0], x.shape[1])
+    value_differences = values[1:] - values[:-1]
+    return value_differences.squeeze()
+
+
 def backup_loss(x: torch.Tensor):
     t, nsim, r, c = x.shape
     x_final = x[-1].view(1, nsim, r, c).clone()
@@ -94,61 +104,63 @@ def backup_loss(x: torch.Tensor):
     x_final_w = batch_state_encoder(x_final).reshape(nsim, r, c)
     x_init_w = batch_state_encoder(x_init).reshape(nsim, r, c)
     value_final = nn_value_func(0, x_final_w).squeeze()
-    value_init = nn_value_func((t - 1) * dt, x_init_w).squeeze()
+    value_init = nn_value_func((sim_params.ntime - 1) * dt, x_init_w).squeeze()
 
-    return -value_init + value_final
+    return (-value_init + value_final).squeeze()
 
 
 def batch_state_loss(x: torch.Tensor):
     x = batch_state_encoder(x)
     t, nsim, r, c = x.shape
-    x_run = x[:-1].view(t-1, nsim, r, c).clone()
-    x_final = x[-1].view(1, nsim, r, c).clone()
+    x_run = x[:-10].view(t-10, nsim, r, c).clone()
+    x_final = x[-10:].view(10, nsim, r, c).clone()
     l_running = loss_quadratic(x_run, Q).squeeze()
     l_terminal = loss_quadratic(x_final, Qf).squeeze()
 
-    return torch.cat((l_running, l_terminal.unsqueeze(0)), dim=0)
+    return torch.cat((l_running, l_terminal), dim=0)
 
 
 def batch_inv_dynamics_loss(x, acc, alpha):
-    x, acc = x[:-1].clone(), acc[:-1, :, :, sim_params.nv:].clone()
     q, v = x[:, :, :, :sim_params.nq], x[:, :, :, sim_params.nq:]
     q = q.reshape((q.shape[0]*q.shape[1], 1, sim_params.nq))
     x_reshape = x.reshape((x.shape[0]*x.shape[1], 1, sim_params.nqv))
     M = tl._Mfull(q).reshape((x.shape[0], x.shape[1], sim_params.nv, sim_params.nv))
+    Tf = tl._Tfric(v).reshape((x.shape[0], x.shape[1], 1, sim_params.nv))
     C = tl._Tbias(x_reshape).reshape((x.shape[0], x.shape[1], 1, sim_params.nv))
-    u_batch = (M @ acc.mT).mT - C
-    return u_batch @ torch.linalg.inv(M) @ u_batch.mT / scale
+    u_batch = tl._Bvec() @ ((M @ acc.mT).mT - C + Tf).mT
+    return (u_batch.mT @ torch.linalg.inv(M) @ u_batch / scale).squeeze()
 
 
-def value_terminal_loss(x: torch.Tensor):
+def value_terminal_loss(x: torch.Tensor, time=0):
     t, nsim, r, c = x.shape
     x_final = x[-1].view(1, nsim, r, c).clone()
     x_final_w = batch_state_encoder(x_final).reshape(nsim, r, c)
-    value_final = nn_value_func(0, x_final_w).squeeze()
+    value_final = nn_value_func(torch.tensor(time), x_final_w).squeeze()
     return value_final
 
 
-def loss_function(x, acc, alpha=1):
-    l_run_ctrl = torch.sum(batch_inv_dynamics_loss(x, acc, alpha).squeeze(), dim=0)
-    l_run_state = torch.sum(batch_state_loss(x).squeeze(), dim=0)
-    l_run = l_run_state + l_run_ctrl
-    l_bellman = backup_loss(x)
-    l_terminal = 1 * value_terminal_loss(x)
-    return torch.mean(torch.square(l_run + l_bellman + l_terminal))
+def loss_function(x, xd, batch_time, alpha=1):
+    x_running, acc_running = x[:-1].clone(), xd[:-1, ..., sim_params.nv:].clone()
+    l_run_ctrl = batch_inv_dynamics_loss(x_running, acc_running, alpha) * 1
+    l_run_state = batch_state_loss(x_running)
+    l_value_diff = value_diff_loss(x, batch_time)
+    l_backup = torch.square((l_run_state + l_run_ctrl)*dt + l_value_diff)
+    l_backup = torch.sum(l_backup, dim=0)
+    l_terminal = 0 * torch.square(value_terminal_loss(x))
+    return torch.mean(l_backup + l_terminal), l_backup + l_terminal
 
 init_lr = 8e-2
 dyn_system = ProjectedDynamicalSystem(
     nn_value_func, loss_func, sim_params, encoder=state_encoder, dynamics=tl, mode=mode, step=step, scale=scale
 ).to(device)
-one_step = torch.linspace(0, dt, 2).to(device)
+time = torch.linspace(0, (sim_params.ntime - 1) * dt, sim_params.ntime).to(device).requires_grad_(True)
+time_input = time.clone().reshape(time.shape[0], 1, 1, 1).repeat(1, sim_params.nsim, 1, 1).requires_grad_(True)
 optimizer = torch.optim.AdamW(dyn_system.parameters(), lr=init_lr, amsgrad=True)
 lambdas = build_discounts(lambdas, discount).to(device)
 
-
 log = f"TWOLINK_TO_m-{mode}_d-{discount}_s-{step}_seed{seed}"
 wandb.watch(dyn_system, loss_function, log="all")
-
+total_time_steps = 0
 
 if __name__ == "__main__":
 
@@ -168,19 +180,22 @@ if __name__ == "__main__":
 
     while iteration < max_iter:
         optimizer.zero_grad()
-        time = torch.linspace(0, (sim_params.ntime - 1) * dt, sim_params.ntime).to(device).requires_grad_(True)
         x_init = x_init[torch.randperm(sim_params.nsim)[:], :, :].clone()
         traj, dtrj_dt = ctrl_odeint(dyn_system, x_init, time, method='euler', options=dict(step_size=dt))
-        acc = dtrj_dt[:, :, :, sim_params.nv:]
-        loss = loss_function(traj, dtrj_dt, alpha)
+        loss, losses = loss_function(traj, dtrj_dt, time_input, alpha)
         loss.backward()
-        sim_params.ntime, _ = optimal_time(sim_params.ntime, max_time, dt, loss_function, x_init, dyn_system, loss)
-        optimizer.step()
+        sim_params.ntime, update = optimal_time(sim_params.ntime, max_time, dt, loss_function, x_init, dyn_system, loss)
+        total_time_steps += sim_params.ntime
+
+        if update:
+            time = torch.linspace(0, (sim_params.ntime - 1) * dt, sim_params.ntime).to(device).requires_grad_(True)
+            time_input = time.clone().reshape(time.shape[0], 1, 1, 1).repeat(1, sim_params.nsim, 1, 1).requires_grad_(True)
+
+        print(f"Epochs: {iteration}, Loss: {loss.item()}, lr: {get_lr(optimizer)},"
+              f" T: {sim_params.ntime}, Total time steps: {total_time_steps}, Update: {update}\n")
         wandb.log({'epoch': iteration+1, 'loss': loss.item()})
 
-
-        print(f"Epochs: {iteration}, Loss: {loss.item()}\n")
-
+        optimizer.step()
         if iteration % 25 == 0:
             for i in range(0, sim_params.nsim, 5):
                 selection = random.randint(0, sim_params.nsim - 1)

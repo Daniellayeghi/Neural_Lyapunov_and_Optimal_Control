@@ -1,7 +1,5 @@
 import random
-
 import torch
-
 from models import Cartpole, ModelParams
 from neural_value_synthesis_diffeq import *
 from torchdiffeq_ctrl import odeint_adjoint as odeint
@@ -20,12 +18,12 @@ torch.manual_seed(seed)
 
 wandb.init(project='CP_balancing', anonymous="allow")
 
-sim_params = SimulationParams(6, 4, 2, 2, 1, 1, 100, 100, 0.008)
+sim_params = SimulationParams(6, 4, 2, 2, 1, 1, 20, 100, 0.008)
 cp_params = ModelParams(2, 2, 1, 4, 4)
-max_iter, max_time, alpha, dt, discount, step, scale, mode = 1e10, 146, .5, 0.008, 20, .005, 1, 'fwd'
-Q = torch.diag(torch.Tensor([25, 25, 0.5, .1])).repeat(sim_params.nsim, 1, 1).to(device)
+max_iter, max_time, alpha, dt, discount, step, scale, mode = 100, 146, .5, 0.008, 20, .005, 1, 'fwd'
+Q = torch.diag(torch.Tensor([0, 25, 0.5, .1])).repeat(sim_params.nsim, 1, 1).to(device)
 R = torch.diag(torch.Tensor([0.001])).repeat(sim_params.nsim, 1, 1).to(device)
-Qf = torch.diag(torch.Tensor([25, 25, 0.5, .1])).repeat(sim_params.nsim, 1, 1).to(device)
+Qf = torch.diag(torch.Tensor([0, 25, 0.5, .1])).repeat(sim_params.nsim, 1, 1).to(device)
 lambdas = torch.ones((sim_params.ntime-0, sim_params.nsim, 1, 1))
 cartpole = Cartpole(sim_params.nsim, cp_params, device, mode='fwd')
 renderer = MjRenderer("./xmls/cartpole.xml", 0.0001)
@@ -172,7 +170,7 @@ time = torch.linspace(0, (sim_params.ntime - 1) * dt, sim_params.ntime).to(devic
 time_input = time.clone().reshape(time.shape[0], 1, 1, 1).repeat(1, sim_params.nsim, 1, 1).requires_grad_(True)
 
 one_step = torch.linspace(0, dt, 2).to(device)
-optimizer = torch.optim.AdamW(dyn_system.parameters(), lr=8e-2, amsgrad=True)
+optimizer = torch.optim.AdamW(dyn_system.parameters(), lr=8e-3*2, amsgrad=True)
 total_time_steps = 0
 log = f"LYAP_CP_m-{mode}_d-{discount}_s-{step}_seed{seed}"
 
@@ -182,16 +180,16 @@ if __name__ == "__main__":
         for param_group in optimizer.param_groups:
             return param_group['lr']
 
+    # qc_init = torch.FloatTensor(sim_params.nsim, 1, 1).uniform_(-2, 2) * 1
     qc_init = torch.FloatTensor(sim_params.nsim, 1, 1).uniform_(-2, 2) * 1
     qp_init = torch.FloatTensor(sim_params.nsim, 1, 1).uniform_(-0.6, 0.6)
-    qd_init = torch.FloatTensor(sim_params.nsim, 1, sim_params.nv).uniform_(0.01, 0.01)
+    qd_init = torch.FloatTensor(sim_params.nsim, 1, sim_params.nv).uniform_(-0.2, 0.2)
     x_init = torch.cat((qc_init, qp_init, qd_init), 2).to(device)
     iteration = 0
     alpha = 0
 
     while iteration < max_iter:
         optimizer.zero_grad()
-        x_init = x_init[torch.randperm(sim_params.nsim)[:], :, :].clone()
         traj, dtraj_dt = odeint(dyn_system, x_init, time, method='euler', options=dict(step_size=dt))
         loss, losses = loss_function(traj, dtraj_dt, time_input, alpha)
         loss.backward()
@@ -210,6 +208,11 @@ if __name__ == "__main__":
             for i in range(0, sim_params.nsim, 20):
                 selection = random.randint(0, sim_params.nsim - 1)
                 renderer.render(traj[:, selection, 0, :sim_params.nq].cpu().detach().numpy())
+
+        if iteration == max_iter-1:
+            from utilities.general_utils import save_trajectory_to_csv
+            save_trajectory_to_csv(traj.clone(), losses, f"data/CP_balancing_traj{seed}.csv", [1, 3])
+
 
         iteration += 1
 

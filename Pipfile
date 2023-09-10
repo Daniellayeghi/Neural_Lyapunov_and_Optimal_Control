@@ -13,6 +13,7 @@ torchdiffeq-ctrl = {ref = "euler", git = "https://github.com/Daniellayeghi/torch
 stable-baselines3 = {extras = ["extra"], version = "*"}
 mujoco-py = "*"
 cython = "<3"
+scipy = "*"
 
 [dev-packages]
 

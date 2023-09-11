@@ -151,7 +151,7 @@ configurations = {
         'xml_path': './xmls/reacher.xml'
     },
     'CP_BALANCE_PPO': {
-        'model_type': CustomCartpole,
+        'model_type': CustomCartpoleBalance,
         'env_name': 'Custom Cartpole Balance PPO',
         'epochs': 400,
         'terminal_time': 300,
@@ -195,7 +195,7 @@ configurations = {
     },
     'CP_BALANCE_SAC': {
         'xml_path': './xmls/cartpole.xml',
-        'model_type': CustomCartpole,
+        'model_type': CustomCartpoleBalance,
         'env_name': 'Custom Reacher SAC',
         'epochs': 250,
         'terminal_time': 100,
@@ -233,7 +233,7 @@ configurations = {
         'xml_path': './xmls/cartpole.xml',
         'model_type': CustomCartpole,
         'env_name': 'Custom Reacher SAC',
-        'epochs': 485,
+        'epochs': 900,
         'terminal_time': 171,
         'nproc': 6,
         'hyperparameters': {
@@ -269,7 +269,7 @@ configurations = {
         'xml_path': './xmls/cartpole.xml',
         'model_type': CustomCartpole,
         'env_name': 'Custom Reacher SAC',
-        'epochs': 485,
+        'epochs': 900,
         'terminal_time': 171,
         'nproc': 6,
         'hyperparameters': {

@@ -13,7 +13,7 @@ configurations = {
     'DI_PPO': {
         'model_type': CustomDoubleIntegrator,
         'env_name': 'Custom Double Integrator PPO',
-        'epochs': 420,
+        'epochs': 417,
         'terminal_time': 400,
         'nproc': 6,
         'hyperparameters': {
@@ -40,7 +40,7 @@ configurations = {
     'DI_SAC': {
         'model_type': CustomDoubleIntegrator,
         'env_name': 'Custom Double Integrator SAC',
-        'epochs': 420,
+        'epochs': 417,
         'terminal_time': 400,
         'nproc': 6,
         'hyperparameters': {
@@ -153,9 +153,9 @@ configurations = {
     'CP_BALANCE_PPO': {
         'model_type': CustomCartpoleBalance,
         'env_name': 'Custom Cartpole Balance PPO',
-        'epochs': 500,
+        'epochs': 1500,
         'terminal_time': 110,
-        'nproc': 8,
+        'nproc': 6,
         'hyperparameters': {
             'batch_size': 128,
             'clip_range': 0.4,  # Placeholder, since this uses a function
@@ -196,8 +196,8 @@ configurations = {
     'CP_BALANCE_SAC': {
         'xml_path': './xmls/cartpole.xml',
         'model_type': CustomCartpoleBalance,
-        'env_name': 'Custom Reacher SAC',
-        'epochs': 500,
+        'env_name': 'Custom Cartpole Balance SAC',
+        'epochs': 1500,
         'terminal_time': 110,
         'nproc': 6,
         'hyperparameters': {
@@ -221,7 +221,7 @@ configurations = {
             'verbose': 1
         },
         'model_params': {
-            'env_id': 'Custom Reacher SAC',
+            'env_id': 'Custom Cartpole Balance SAC',
             'init_bound': {
                 'position': [(-2, 2), (-.6, .6)],  # bounds for joint 1, joint 2, joint 3
                 'velocity': [(0.2, 0.2), (0.2, 0.2)]  # bounds for joint 1, joint 2, joint 3
@@ -232,8 +232,8 @@ configurations = {
     'CP_SWINGUP_SAC': {
         'xml_path': './xmls/cartpole.xml',
         'model_type': CustomCartpole,
-        'env_name': 'Custom Reacher SAC',
-        'epochs': 900,
+        'env_name': 'Custom Cartpole Swingup SAC',
+        'epochs': 980,
         'terminal_time': 171,
         'nproc': 6,
         'hyperparameters': {
@@ -257,7 +257,7 @@ configurations = {
             'verbose': 1
         },
         'model_params': {
-            'env_id': 'Custom Reacher SAC',
+            'env_id': 'Custom Cartpole Swingup SAC',
             'init_bound': {
                 'position': [(0, 0), (2.84, 3.44)],  # bounds for joint 1, joint 2, joint 3
                 'velocity': [(0, 0), (0, 0)]  # bounds for joint 1, joint 2, joint 3
@@ -268,8 +268,8 @@ configurations = {
     'CP_SWINGUP_PPO': {
         'xml_path': './xmls/cartpole.xml',
         'model_type': CustomCartpole,
-        'env_name': 'Custom Reacher SAC',
-        'epochs': 900,
+        'env_name': 'Custom Cartpole Swingup PPO',
+        'epochs': 980,
         'terminal_time': 171,
         'nproc': 6,
         'hyperparameters': {
@@ -300,7 +300,7 @@ configurations = {
             'verbose': 1
         },
         'model_params': {
-            'env_id': 'Custom Reacher SAC',
+            'env_id': 'Custom Cartpole Swingup PPO',
             'init_bound': {
                 'position': [(0, 0), (2.84, 3.44)],  # bounds for joint 1, joint 2, joint 3
                 'velocity': [(0, 0), (0, 0)]  # bounds for joint 1, joint 2, joint 3

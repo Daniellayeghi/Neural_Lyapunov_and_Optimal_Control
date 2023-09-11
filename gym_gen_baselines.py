@@ -41,6 +41,7 @@ if __name__ == "__main__":
         result, model_path = queue.get()
         print("Generating plots")
         plot_reward_graph_multi(result, f"{env.upper()} {solver.upper()}")
-
-    plt.show()
+    #
+    # plt.show()
+    # plt.close(1)
 

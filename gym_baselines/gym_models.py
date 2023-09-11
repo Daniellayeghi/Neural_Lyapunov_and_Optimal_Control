@@ -66,11 +66,15 @@ class CustomDoubleIntegrator(CustomEnv):
         self._mass = 1
         self._gear = 1
         self._dt = 0.01
-        self._Q = np.diag(np.array([1, .01]))
-        self._R = np.array([[.01]])
+        self._Q = np.diag(np.array([10, .1]))
+        self._Qf = np.diag(np.array([10, .1])) * 10
+        self._R = np.array([[1]])
 
     def _get_reward(self, state, u):
-        return np.exp(-.1 * (state.T @ self._Q @ state + u.T @ self._R @ u))
+        Q = self._Q
+        if self._iter >= self._terminal_time - 4:
+            Q = self._Qf
+        return -1*(state.T @ Q @ state + u.T @ self._R @ u)
 
     def _enc_state(self):
         q, qd = self.state
@@ -163,7 +167,7 @@ class CustomCartpole(CustomEnv):
         self._fr = np.array([0, .1]).reshape(2, 1)
         self._Q = np.diag(np.array([0, 0, 0, .0]))
         self._Qf = np.diag(np.array([80, 600, 0.8, 4.5]))
-        self._R = np.array([[0.5]])
+        self._R = np.array([[0.5]])/10
         self._dt = .01
         self.retrun_state = return_state
         self.state = np.zeros(4)

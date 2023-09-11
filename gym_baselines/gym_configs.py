@@ -13,8 +13,8 @@ configurations = {
     'DI_PPO': {
         'model_type': CustomDoubleIntegrator,
         'env_name': 'Custom Double Integrator PPO',
-        'epochs': 80,
-        'terminal_time': 300,
+        'epochs': 420,
+        'terminal_time': 400,
         'nproc': 6,
         'hyperparameters': {
             'ent_coef': 0.0,
@@ -30,18 +30,18 @@ configurations = {
         'model_params': {
             'env_id': 'Custom Double Integrator PPO',
             'init_bound': {
-                'position': (-3, 3),
-                'velocity': (-3, 3)
+                'position': [(-3, 3)],
+                'velocity': [(-3, 3)]
             },
-            'terminal_time': 300
+            'terminal_time': 400
         },
         'xml_path': './xmls/doubleintegrator.xml'
     },
     'DI_SAC': {
         'model_type': CustomDoubleIntegrator,
         'env_name': 'Custom Double Integrator SAC',
-        'epochs': 80,
-        'terminal_time': 300,
+        'epochs': 420,
+        'terminal_time': 400,
         'nproc': 6,
         'hyperparameters': {
             'policy': 'MlpPolicy',
@@ -65,10 +65,10 @@ configurations = {
         'model_params': {
             'env_id': 'Custom Double Integrator SAC',
             'init_bound': {
-                'position': (-3, 3),
-                'velocity': (-3, 3)
+                'position': [(-3, 3)],
+                'velocity': [(-3, 3)]
             },
-            'terminal_time': 300
+            'terminal_time': 400
         },
         'xml_path': './xmls/doubleintegrator.xml'
     },
@@ -153,8 +153,8 @@ configurations = {
     'CP_BALANCE_PPO': {
         'model_type': CustomCartpoleBalance,
         'env_name': 'Custom Cartpole Balance PPO',
-        'epochs': 400,
-        'terminal_time': 300,
+        'epochs': 500,
+        'terminal_time': 110,
         'nproc': 8,
         'hyperparameters': {
             'batch_size': 128,
@@ -186,10 +186,10 @@ configurations = {
         'model_params': {
             'env_id': 'Custom Cartpole Balance PPO',
             'init_bound': {
-                'position': (-.6, .6),
-                'velocity': (0, 0)
+                'position': [(-2, 2), (-.6, .6)],  # bounds for joint 1, joint 2, joint 3
+                'velocity': [(0.2, 0.2), (0.2, 0.2)]  # bounds for joint 1, joint 2, joint 3
             },
-            'terminal_time': 300
+            'terminal_time': 110
         },
         'xml_path': './xmls/cartpole.xml'
     },
@@ -197,8 +197,8 @@ configurations = {
         'xml_path': './xmls/cartpole.xml',
         'model_type': CustomCartpoleBalance,
         'env_name': 'Custom Reacher SAC',
-        'epochs': 250,
-        'terminal_time': 100,
+        'epochs': 500,
+        'terminal_time': 110,
         'nproc': 6,
         'hyperparameters': {
             'batch_size': 256,
@@ -223,10 +223,10 @@ configurations = {
         'model_params': {
             'env_id': 'Custom Reacher SAC',
             'init_bound': {
-                'position': (-.6, .6),
-                'velocity': (0, 0)
+                'position': [(-2, 2), (-.6, .6)],  # bounds for joint 1, joint 2, joint 3
+                'velocity': [(0.2, 0.2), (0.2, 0.2)]  # bounds for joint 1, joint 2, joint 3
             },
-            'terminal_time': 100
+            'terminal_time': 110
         }
     },
     'CP_SWINGUP_SAC': {

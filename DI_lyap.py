@@ -133,9 +133,9 @@ def loss_function(x, xd, batch_time, alpha=1):
     l_value_diff = value_diff_loss(x, batch_time)
     l_backup = torch.max((l_run_state + l_run_ctrl)*dt + l_value_diff, torch.zeros_like(l_value_diff))
     l_backup = torch.sum(l_backup, dim=0)
-    print(f"constaints: \n {l_backup.squeeze()} \n {x_init.squeeze()}")
+    # print(f"constaints: \n {l_backup.squeeze()} \n {x_init.squeeze()}")
     l_terminal = 0 * torch.square(value_terminal_loss(x))
-    return torch.mean(l_backup + l_terminal), l_backup + l_terminal
+    return torch.mean(l_backup + l_terminal), l_backup + l_terminal, torch.mean(torch.sum((l_run_state + l_run_ctrl), dim=0)).squeeze()
 
 
 pos_arr = torch.linspace(-1, 1, 100).to(device)
@@ -172,18 +172,18 @@ if __name__ == "__main__":
     while iteration < max_iter:
         optimizer.zero_grad()
         traj, dtraj_dt = odeint(dyn_system, x_init, time, method='euler', options=dict(step_size=dt))
-        loss, losses = loss_function(traj, dtraj_dt, time_input, alpha)
+        loss, losses, traj_loss = loss_function(traj, dtraj_dt, time_input, alpha)
 
         print(f"Epochs: {iteration}, Loss: {loss.item()}, lr: {get_lr(optimizer)}, T: {sim_params.ntime}, Total time steps: {total_time_steps}\n")
-        wandb.log({'epoch': iteration+1, 'loss': loss.item()})
+        wandb.log({'epoch': iteration+1, 'loss': loss.item(), 'traj_loss': traj_loss.item()})
         loss.backward()
         optimizer.step()
 
-        if iteration % 10 == 0:
-            with torch.no_grad():
-                plot_2d_funcition(pos_arr, vel_arr, [X, Y], f_mat, nn_value_func, trace=traj, contour=True)
+        # if iteration % 10 == 0:
+        #     with torch.no_grad():
+        #         plot_2d_funcition(pos_arr, vel_arr, [X, Y], f_mat, nn_value_func, trace=traj, contour=True)
 
-        plt.pause(0.01)
+        # plt.pause(0.01)
 
         iteration += 1
         total_time_steps += sim_params.ntime

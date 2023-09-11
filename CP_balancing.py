@@ -56,33 +56,6 @@ def batch_state_encoder(x: torch.Tensor):
     return torch.cat((qc, qp, v), 1).reshape((t, b, r, c))
 
 
-class NNValueFunction(nn.Module):
-    def __init__(self, n_in):
-        super(NNValueFunction, self).__init__()
-
-        self.nn = nn.Sequential(
-            nn.Linear(n_in+1, 200),
-            nn.Softplus(beta=5),
-            nn.Linear(200, 500),
-            nn.Softplus(beta=5),
-            nn.Linear(500, 1)
-        )
-
-        def init_weights(m):
-            if isinstance(m, nn.Linear):
-                torch.nn.init.xavier_uniform_(m.weight)
-                torch.nn.init.uniform_(m.bias)
-
-        self.nn.apply(init_weights)
-
-    def forward(self, t, x):
-        x = x.reshape(x.shape[0], sim_params.nqv)
-        b = x.shape[0]
-        time = torch.ones((b, 1)).to('cuda') * t
-        aug_x = torch.cat((x, time), dim=1)
-        return self.nn(aug_x).reshape(b, 1, 1)
-
-
 nn_value_func = ICNN([sim_params.nqv+1, 200, 500, 1]).to(device)
 
 def loss_func(x: torch.Tensor):
@@ -147,7 +120,7 @@ def loss_function(x, xd, batch_time, alpha=1):
     l_backup = torch.max((l_run_state + l_run_ctrl)*dt + l_value_diff, torch.zeros_like(l_value_diff))
     l_backup = torch.sum(l_backup, dim=0)
     l_terminal = 0 * torch.square(value_terminal_loss(x))
-    return torch.mean(l_backup + l_terminal), l_backup + l_terminal
+    return torch.mean(l_backup + l_terminal), l_backup + l_terminal, torch.mean(torch.sum((l_run_state + l_run_ctrl), dim=0)).squeeze()
 
 cartpole.GEAR = 1
 cartpole.LENGTH = 0.3
@@ -182,7 +155,7 @@ if __name__ == "__main__":
     while iteration < max_iter:
         optimizer.zero_grad()
         traj, dtraj_dt = odeint(dyn_system, x_init, time, method='euler', options=dict(step_size=dt))
-        loss, losses = loss_function(traj, dtraj_dt, time_input, alpha)
+        loss, losses, traj_loss = loss_function(traj, dtraj_dt, time_input, alpha)
         loss.backward()
         sim_params.ntime, update = optimal_time(sim_params.ntime, max_time, dt, loss_function, x_init, dyn_system, loss)
         total_time_steps += sim_params.ntime
@@ -191,7 +164,7 @@ if __name__ == "__main__":
             time_input = time.clone().reshape(time.shape[0], 1, 1, 1).repeat(1, sim_params.nsim, 1, 1).requires_grad_(True)
 
         print(f"Epochs: {iteration}, Loss: {loss.item()}, lr: {get_lr(optimizer)}, T: {sim_params.ntime}, Total time steps: {total_time_steps}, Update: {update}\n")
-        wandb.log({'epoch': iteration+1, 'loss': loss.item()})
+        wandb.log({'epoch': iteration+1, 'loss': loss.item(), 'traj_loss': traj_loss.item()})
 
         optimizer.step()
 

@@ -146,7 +146,7 @@ def loss_function(x, xd, batch_time, alpha=1):
     l_backup = torch.square((l_run_state + l_run_ctrl)*dt + l_value_diff)
     l_backup = torch.sum(l_backup, dim=0)
     l_terminal = 0 * torch.square(value_terminal_loss(x))
-    return torch.mean(l_backup + l_terminal), l_backup + l_terminal
+    return torch.mean(l_backup + l_terminal), l_backup + l_terminal,  torch.mean(torch.sum((l_run_state + l_run_ctrl), dim=0)).squeeze()
 
 
 dyn_system = ProjectedDynamicalSystem(
@@ -189,7 +189,7 @@ if __name__ == "__main__":
         optimizer.zero_grad()
         x_init = x_init[torch.randperm(sim_params.nsim)[:], :, :].clone()
         traj, dtraj_dt = odeint(dyn_system, x_init, time, method='euler', options=dict(step_size=dt))
-        loss, losses = loss_function(traj, dtraj_dt, time_input, alpha)
+        loss, losses, traj_loss = loss_function(traj, dtraj_dt, time_input, alpha)
         loss.backward()
         sim_params.ntime, update = optimal_time(sim_params.ntime, max_time, dt, loss_function, x_init, dyn_system, loss)
         total_time_steps += sim_params.ntime
@@ -198,7 +198,7 @@ if __name__ == "__main__":
             time_input = time.clone().reshape(time.shape[0], 1, 1, 1).repeat(1, sim_params.nsim, 1, 1).requires_grad_(True)
 
         print(f"Epochs: {iteration}, Loss: {loss.item()}, lr: {get_lr(optimizer)}, T: {sim_params.ntime}, Total time steps: {total_time_steps}, Update: {update}\n")
-        wandb.log({'epoch': iteration+1, 'loss': loss.item()})
+        wandb.log({'epoch': iteration+1, 'loss': loss.item(), 'traj_loss': traj_loss.item()})
 
         optimizer.step()
         custom_lr.step(loss.item())

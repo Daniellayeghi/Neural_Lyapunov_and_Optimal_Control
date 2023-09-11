@@ -170,11 +170,10 @@ class CustomCartpole(CustomEnv):
 
     def _get_reward(self, state, u):
         Q = self._Q
-        M = self._get_mass_matrix(state)[0][0]
         if self._iter >= self._terminal_time - 10:
             Q = self._Qf
 
-        return -(state.T @ Q @ state + u.T @ torch.linalg.inv(M) @ u)
+        return -(state.T @ Q @ state + u.T @ self._R @ u)
 
     def _enc_state(self):
         qc, qp, qdc, qdp = self.state
@@ -233,18 +232,17 @@ class CustomCartpoleBalance(CustomEnv):
         self._fr = np.array([.1, .1]).reshape(2, 1)
         self._Q = np.diag(np.array([0, 25, 0.5, .1]))
         self._Qf = np.diag(np.array([0, 25, 0.5, .1]))
-        self._R = np.array([[0.5]])
+        self._R = np.array([[0.9]])
         self._dt = .01
         self.retrun_state = return_state
         self.state = np.zeros(4)
 
     def _get_reward(self, state, u):
         Q = self._Q
-        M = self._get_mass_matrix(state)[0][0]
         if self._iter >= self._terminal_time - 4:
             Q = self._Qf
 
-        return -(state.T @ Q @ state + u.T @ np.linalg.inv(M) @ u)
+        return -(state.T @ Q @ state + u.T @ self._R @ u)
 
     def _enc_state(self):
         qc, qp, qdc, qdp = self.state

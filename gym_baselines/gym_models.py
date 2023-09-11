@@ -16,6 +16,7 @@ class CustomEnv(gym.Env):
         self._env_id = env_id
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(observation_dim,), dtype=np.float32)
         self.action_space = spaces.Box(low=-action_bounds, high=action_bounds, shape=(action_dim,), dtype=np.float32)
+        self.transform_func = None
 
     def _terminated(self):
         return self._iter >= self._terminal_time
@@ -83,21 +84,32 @@ class CustomDoubleIntegrator(CustomEnv):
 
 class CustomReacher(CustomEnv):
     def __init__(self, env_id, init_bound, terminal_time):
-        super(CustomReacher, self).__init__(env_id, init_bound, terminal_time, 4, 2, 40)
+        super(CustomReacher, self).__init__(env_id, init_bound, terminal_time, 4, 2, 3)
 
         self._friction = np.array([0.025, 0.025]).reshape(2, 1)
         self._B = np.array([1, 1]).reshape(2, 1)
         self._gear = 0, 1
         self._dt = 0.01
         self._Q = np.diag(np.array([1, 1, 0, 0]))
+        self._Qf = np.diag(np.array([100, 100, 1, 1]))
         self._R = np.diag(np.array([1, 1]))
 
+        def transform_func(traj: np.array):
+            traj[..., 1] = np.pi - (traj[..., 0] + (np.pi - traj[..., 1]))
+            return traj
+
+        self.transform_func = transform_func
+
     def _get_reward(self, state, u):
-        return -1*(state.T @ self._Q @ state + u.T @ self._R @ u)
+        Q = self._Q
+        if self._iter >= self._terminal_time - 10:
+            Q = self._Qf
+
+        return -1*(state.T @ Q @ state + u.T @ self._R @ u)
 
     def _enc_state(self):
         q1, q2, qd1, qd2 = self.state
-        enc = lambda x: np.pi ** 2 * np.sin(x)
+        enc = lambda x: np.arctan2(np.sin(x), np.cos(x))
         return np.array([enc(q1), enc(q2), qd1, qd2], dtype=np.float32)
 
     def step(self, u):

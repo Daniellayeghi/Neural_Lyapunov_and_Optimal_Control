@@ -75,9 +75,9 @@ configurations = {
     'TL_PPO': {
         'model_type': CustomReacher,
         'env_name': 'Custom Reacher PPO',
-        'epochs': 80,
-        'terminal_time': 300,
-        'nproc': 8,
+        'epochs': 975,
+        'terminal_time': 171,
+        'nproc': 6,
         'hyperparameters': {
             'batch_size': 64,
             'clip_range': 0.4,  # Placeholder, since this uses a function
@@ -111,15 +111,15 @@ configurations = {
                 'position': (-3, 3),
                 'velocity': (0, 0)
             },
-            'terminal_time': 300
+            'terminal_time': 171
         },
-        'xml_path': './xmls/reahcer.xml'
+        'xml_path': './xmls/reacher.xml'
     },
     'TL_SAC': {
         'model_type':CustomReacher,
         'env_name': 'Custom Reacher SAC',
-        'epochs': 60,
-        'terminal_time': 300,
+        'epochs': 300,
+        'terminal_time': 171,
         'nproc': 6,
         'hyperparameters': {
             'batch_size': 256,
@@ -136,7 +136,7 @@ configurations = {
             },
             'tau': 0.02,
             'train_freq': 64,
-            'use_sde': False,
+            'use_sde': True,
             'tensorboard_log': './sac_tensorboard_tl/',
             'verbose': 1
         },
@@ -146,9 +146,9 @@ configurations = {
                 'position': (-3, 3),
                 'velocity': (0, 0)
             },
-            'terminal_time': 300
+            'terminal_time': 171
         },
-        'xml_path': './xmls/reahcer.xml'
+        'xml_path': './xmls/reacher.xml'
     },
     'CP_BALANCE_PPO': {
         'model_type': CustomCartpole,

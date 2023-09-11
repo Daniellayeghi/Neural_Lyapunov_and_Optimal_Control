@@ -27,7 +27,11 @@ class PolicyVisualizer:
             while iteration < self._limit:  # Keep running until interrupted
                 self._obs = self._env.reset()
                 positions = [pos for pos, reset in [self._simulate() for _ in range(horizon)] if not reset]
-                self._renderer.render(np.array(positions))
+                results = np.array(positions)
+                if self._transform_func is not None:
+                    results = self._transform_func(results)
+
+                self._renderer.render(results)
                 iteration += 1
 
         except KeyboardInterrupt:  # Handle interruption
@@ -52,6 +56,7 @@ class VisualizePolicyCallback(EvalCallback):
     def __init__(self, eval_env, xml_path, visualize_nth, **kwargs):
         super().__init__(eval_env, **kwargs)
         self._visualizer = None
+
         self._vnth = visualize_nth
         if xml_path is None:
             raise ValueError("xml_path is required for VisualEvalCallback.")
@@ -60,7 +65,9 @@ class VisualizePolicyCallback(EvalCallback):
     @property
     def visualizer(self):
         if self._visualizer is None:
-            self._visualizer = PolicyVisualizer(self.model, self.eval_env, self._xml_path, limit=1)
+            self._visualizer = PolicyVisualizer(
+                self.model, self.eval_env, self._xml_path, transform_func=self.eval_env.envs[0].transform_func, limit=1
+            )
         return self._visualizer
 
     def _on_step(self) -> bool:

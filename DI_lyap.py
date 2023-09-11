@@ -68,36 +68,14 @@ def batch_state_encoder(x: torch.Tensor):
     return x
 
 
-class NNValueFunction(nn.Module):
-    def __init__(self, n_in):
-        super(NNValueFunction, self).__init__()
-
-        self.nn = nn.Sequential(
-            nn.Linear(n_in+1, 4, bias=False),
-            nn.Softplus(),
-            nn.Linear(4, 1, bias=False)
-        )
-
-        def init_weights(net):
-            if type(net) == nn.Linear:
-                torch.nn.init.xavier_uniform(net.weight)
-
-        self.nn.apply(init_weights)
-
-    def forward(self, t, x):
-        x = x.reshape(x.shape[0], sim_params.nqv)
-        b = x.shape[0]
-        time = torch.ones((b, 1)).to(device) * t
-        aug_x = torch.cat((x, time), dim=1)
-        return self.nn(aug_x).reshape(b, 1, 1)
-
-
 def loss_func(x: torch.Tensor):
     x = state_encoder(x)
     return x @ Q @ x.mT
 
+
 import torch.nn.functional as F
 nn_value_func = ICNN([sim_params.nqv+1, 4, 4, 1], F.softplus).to(device)
+
 
 def loss_func(x: torch.Tensor):
     return x @ Q @ x.mT

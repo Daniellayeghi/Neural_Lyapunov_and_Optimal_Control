@@ -13,11 +13,11 @@ args = parser.parse_args()
 seed = args.seed
 
 di_params = ModelParams(1, 1, 1, 2, 2)
-sim_params = SimulationParams(3, 2, 1, 1, 1, 1, 80, 100, 0.01)
+sim_params = SimulationParams(3, 2, 1, 1, 1, 1, 20, 400, 0.01)
 di = DoubleIntegrator(sim_params.nsim, di_params, device)
-max_iter, alpha, dt, discount, step, scale, mode = 65, .5, 0.01, 1, 0.005, 1, 'fwd'
-Q = torch.diag(torch.Tensor([1, .01])).repeat(sim_params.nsim, 1, 1).to(device)*1
-Qf = torch.diag(torch.Tensor([1, .01])).repeat(sim_params.nsim, 1, 1).to(device)*100
+max_iter, alpha, dt, discount, step, scale, mode = 200, .5, 0.01, 1, 0.005, 1, 'fwd'
+Q = torch.diag(torch.Tensor([10, .1])).repeat(sim_params.nsim, 1, 1).to(device)*1
+Qf = torch.diag(torch.Tensor([10, .1])).repeat(sim_params.nsim, 1, 1).to(device) * 10
 R = torch.diag(torch.Tensor([.1])).repeat(sim_params.nsim, 1, 1).to(device)
 lambdas = torch.ones((sim_params.ntime, sim_params.nsim, 1, 1))
 
@@ -31,7 +31,7 @@ def plot_2d_funcition(xs: torch.Tensor, ys: torch.Tensor, xy_grid, f_mat, func, 
     for i, x in enumerate(xs):
         for j, y in enumerate(ys):
             in_tensor = torch.tensor((x, y)).repeat(2, 1, 1).float().to(device)
-            f_mat[i, j] = torch.mean(func(0, in_tensor).detach().squeeze())
+            f_mat[i, j] = torch.mean(func(torch.tensor(0), in_tensor).detach().squeeze())
 
     [X, Y] = xy_grid
     f_mat = f_mat.cpu()
@@ -68,28 +68,6 @@ def batch_state_encoder(x: torch.Tensor):
     return x
 
 
-class NNValueFunction(nn.Module):
-    def __init__(self, n_in):
-        super(NNValueFunction, self).__init__()
-
-        self.nn = nn.Sequential(
-            nn.Linear(n_in+1, 4, bias=False),
-            nn.Softplus(),
-            nn.Linear(4, 1, bias=False)
-        )
-
-        def init_weights(net):
-            if type(net) == nn.Linear:
-                torch.nn.init.xavier_uniform(net.weight)
-
-        self.nn.apply(init_weights)
-
-    def forward(self, t, x):
-        x = x.reshape(x.shape[0], sim_params.nqv)
-        b = x.shape[0]
-        time = torch.ones((b, 1)).to(device) * t
-        aug_x = torch.cat((x, time), dim=1)
-        return self.nn(aug_x).reshape(b, 1, 1)
 
 
 def loss_func(x: torch.Tensor):
@@ -98,7 +76,7 @@ def loss_func(x: torch.Tensor):
 
 
 import torch.nn.functional as F
-nn_value_func = ICNN([sim_params.nqv+1, 4, 4, 1], F.softplus).to(device)
+nn_value_func = ICNN([sim_params.nqv+1, 64, 64, 1], F.softplus).to(device)
 
 
 def loss_quadratic(x, gain):
@@ -133,7 +111,7 @@ def value_diff_loss(x: torch.Tensor, time):
 def value_terminal_loss(x: torch.Tensor):
     t, nsim, r, c = x.shape
     x_final = x[-1].view(1, nsim, r, c).clone().reshape(nsim, r, c)
-    value_final = nn_value_func(0, x_final).squeeze()
+    value_final = nn_value_func(torch.tensor(sim_params.ntime-1)/0.01, x_final).squeeze()
     return value_final
 
 
@@ -147,19 +125,21 @@ def batch_inv_dynamics_loss(x, acc, alpha):
     u_batch = ((M @ acc.mT).mT - C + Tf) * di._Bvec()
     return (u_batch @ torch.linalg.inv(M) @ u_batch.mT / scale).squeeze()
 
+
 def loss_function(x, xd, batch_time, alpha=1):
     x_running, acc_running = x[:-1].clone(), xd[:-1, ..., sim_params.nv:].clone()
-    l_run_ctrl = batch_inv_dynamics_loss(x_running, acc_running, alpha) * 1
+    l_run_ctrl = batch_inv_dynamics_loss(x_running, acc_running, alpha) *0
     l_run_state = batch_state_loss(x_running)
     l_value_diff = value_diff_loss(x, batch_time)
     l_backup = torch.max((l_run_state + l_run_ctrl)*dt + l_value_diff, torch.zeros_like(l_value_diff))
     l_backup = torch.sum(l_backup, dim=0)
+    print(f"constaints: \n {l_backup.squeeze()} \n {x_init.squeeze()}")
     l_terminal = 0 * torch.square(value_terminal_loss(x))
     return torch.mean(l_backup + l_terminal), l_backup + l_terminal
 
 
-pos_arr = torch.linspace(-15, 15, 100).to(device)
-vel_arr = torch.linspace(-15, 15, 100).to(device)
+pos_arr = torch.linspace(-1, 1, 100).to(device)
+vel_arr = torch.linspace(-1, 1, 100).to(device)
 f_mat = torch.zeros((100, 100)).to(device)
 [X, Y] = torch.meshgrid(pos_arr.squeeze().cpu(), vel_arr.squeeze().cpu())
 time = torch.linspace(0, (sim_params.ntime - 1) * dt, sim_params.ntime).requires_grad_(True).to(device)
@@ -174,6 +154,7 @@ lambdas = build_discounts(lambdas, discount).to(device)
 
 log = f"DI_LYAP_m-{mode}_d-{discount}_s-{step}_seed{seed}"
 wandb.watch(dyn_system, loss_function, log="all")
+total_time_steps = 0
 
 
 if __name__ == "__main__":
@@ -182,8 +163,8 @@ if __name__ == "__main__":
         for param_group in optimizer.param_groups:
             return param_group['lr']
 
-    q_init = torch.FloatTensor(sim_params.nsim, 1, sim_params.nq).uniform_(-1, 1) * 3
-    qd_init = torch.FloatTensor(sim_params.nsim, 1, sim_params.nq).uniform_(-1, 1) * 3
+    q_init = torch.FloatTensor(sim_params.nsim, 1, sim_params.nq).uniform_(-1, 1) * 1
+    qd_init = torch.FloatTensor(sim_params.nsim, 1, sim_params.nq).uniform_(-1, 1) * .7
     x_init = torch.cat((q_init, qd_init), 2).to(device)
     trajectory = x_init.detach().clone().unsqueeze(0)
     iteration = 0
@@ -192,10 +173,12 @@ if __name__ == "__main__":
         optimizer.zero_grad()
         traj, dtraj_dt = odeint(dyn_system, x_init, time, method='euler', options=dict(step_size=dt))
         loss, losses = loss_function(traj, dtraj_dt, time_input, alpha)
-        loss.backward()
-        print(f"Epochs: {iteration}, Loss: {loss.item()}, lr: {get_lr(optimizer)}, T: {sim_params.ntime}, Total time steps: {total_time_steps}, Update: {update}\n")
-        wandb.log({'epoch': iteration+1, 'loss': loss.item()})
+        dyn_system.step *= 1.08
+        dyn_system.step = min(dyn_system.step, .4)
 
+        print(f"Epochs: {iteration}, Loss: {loss.item()}, lr: {get_lr(optimizer)}, T: {sim_params.ntime}, Total time steps: {total_time_steps}\n")
+        wandb.log({'epoch': iteration+1, 'loss': loss.item()})
+        loss.backward()
         optimizer.step()
 
         if iteration % 10 == 0:
@@ -205,10 +188,9 @@ if __name__ == "__main__":
         plt.pause(0.01)
 
         iteration += 1
+        total_time_steps += sim_params.ntime
 
     plot_2d_funcition(pos_arr, vel_arr, [X, Y], f_mat, nn_value_func, trace=traj, contour=True)
-
-
     plt.tick_params(labelsize=12)
 
     # Save plot as high definition PNG

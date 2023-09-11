@@ -108,8 +108,8 @@ configurations = {
         'model_params': {
             'env_id': 'Custom Reacher PPO',
             'init_bound': {
-                'position': (-3, 3),
-                'velocity': (0, 0)
+                'position': [(-3, 3), (-3, 3)],  # bounds for joint 1, joint 2, joint 3
+                'velocity': [(0, 0), (0, 0)]  # bounds for joint 1, joint 2, joint 3
             },
             'terminal_time': 171
         },
@@ -143,8 +143,8 @@ configurations = {
         'model_params': {
             'env_id': 'Custom Reacher SAC',
             'init_bound': {
-                'position': (-3, 3),
-                'velocity': (0, 0)
+                'position': [(-3, 3), (-3, 3)],  # bounds for joint 1, joint 2, joint 3
+                'velocity': [(0, 0), (0, 0)]  # bounds for joint 1, joint 2, joint 3
             },
             'terminal_time': 171
         },
@@ -253,7 +253,7 @@ configurations = {
             'tau': 0.02,
             'train_freq': 64,
             'use_sde': False,
-            'tensorboard_log': './sac_tensorboard_cp_balance/',
+            'tensorboard_log': './sac_tensorboard_cp_swingup/',
             'verbose': 1
         },
         'model_params': {
@@ -265,6 +265,49 @@ configurations = {
             'terminal_time': 171
         }
     },
+    'CP_SWINGUP_PPO': {
+        'xml_path': './xmls/cartpole.xml',
+        'model_type': CustomCartpole,
+        'env_name': 'Custom Reacher SAC',
+        'epochs': 485,
+        'terminal_time': 171,
+        'nproc': 6,
+        'hyperparameters': {
+            'batch_size': 128,
+            'clip_range': 0.4,  # Placeholder, since this uses a function
+            'ent_coef': 0.0,
+            'gae_lambda': 0.92,
+            'gamma': 0.99,
+            'learning_rate': 3e-5,
+            'max_grad_norm': 0.5,
+            'n_epochs': 20,
+            'n_steps': 512,
+            'policy': 'MlpPolicy',
+            'policy_kwargs': {
+                'log_std_init': -2.7,
+                'activation_fn': nn.ReLU,
+                'ortho_init': False,
+                'net_arch': {
+                    'pi': [256, 256],
+                    'vf': [256, 256]
+                }
+            },
+            'sde_sample_freq': 4,
+            'use_sde': True,
+            'vf_coef': 0.5,
+            'normalize_advantage': True,
+            'tensorboard_log': './ppo_tensorboard_cp_swingup/',
+            'verbose': 1
+        },
+        'model_params': {
+            'env_id': 'Custom Reacher SAC',
+            'init_bound': {
+                'position': [(0, 0), (2.84, 3.44)],  # bounds for joint 1, joint 2, joint 3
+                'velocity': [(0, 0), (0, 0)]  # bounds for joint 1, joint 2, joint 3
+            },
+            'terminal_time': 171
+        }
+    }
 }
 
 

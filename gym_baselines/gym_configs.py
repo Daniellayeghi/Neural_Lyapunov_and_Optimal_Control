@@ -229,6 +229,42 @@ configurations = {
             'terminal_time': 100
         }
     },
+    'CP_SWINGUP_SAC': {
+        'xml_path': './xmls/cartpole.xml',
+        'model_type': CustomCartpole,
+        'env_name': 'Custom Reacher SAC',
+        'epochs': 485,
+        'terminal_time': 171,
+        'nproc': 6,
+        'hyperparameters': {
+            'batch_size': 256,
+            'buffer_size': 300000,
+            'ent_coef': 'auto',
+            'gamma': 0.98,
+            'gradient_steps': 64,
+            'learning_rate': .00073,
+            'learning_starts': 10000,
+            'policy': 'MlpPolicy',
+            'policy_kwargs': {
+                'activation_fn': nn.ReLU,
+                'log_std_init': -3,
+                'net_arch': [400, 300]
+            },
+            'tau': 0.02,
+            'train_freq': 64,
+            'use_sde': False,
+            'tensorboard_log': './sac_tensorboard_cp_balance/',
+            'verbose': 1
+        },
+        'model_params': {
+            'env_id': 'Custom Reacher SAC',
+            'init_bound': {
+                'position': [(0, 0), (2.84, 3.44)],  # bounds for joint 1, joint 2, joint 3
+                'velocity': [(0, 0), (0, 0)]  # bounds for joint 1, joint 2, joint 3
+            },
+            'terminal_time': 171
+        }
+    },
 }
 
 

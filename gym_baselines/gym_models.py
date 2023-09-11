@@ -26,15 +26,22 @@ class CustomEnv(gym.Env):
         if seed is not None:
             self.seed(seed)
 
-        dim_half = self.observation_space.shape[0] // 2  # Assuming symmetric dimensions
+        # Validate that the bounds are correctly specified for each joint
+        if len(self.init_bound['position']) != len(self.init_bound['velocity']):
+            raise ValueError("Mismatch between the number of position and velocity bounds")
 
-        # Generate initial state based on the given bounds for position and velocity
-        position_init = self.np_random.uniform(
-            low=self.init_bound['position'][0], high=self.init_bound['position'][1], size=dim_half
-        )
-        velocity_init = self.np_random.uniform(
-            low=self.init_bound['velocity'][0], high=self.init_bound['velocity'][1], size=dim_half
-        )
+        num_joints = len(self.init_bound['position'])
+
+        # Generate initial state based on the given bounds for position and velocity for each joint
+        position_init = np.array([
+            self.np_random.uniform(low=low, high=high)
+            for (low, high) in self.init_bound['position']
+        ])
+
+        velocity_init = np.array([
+            self.np_random.uniform(low=low, high=high)
+            for (low, high) in self.init_bound['velocity']
+        ])
 
         # Combine the initial position and velocity states
         self._init_state = np.concatenate([position_init, velocity_init])
@@ -146,20 +153,25 @@ class CustomReacher(CustomEnv):
 class CustomCartpole(CustomEnv):
     def __init__(self, env_id, init_bound=(-np.inf, np.inf), terminal_time=100, return_state=False):
         super(CustomCartpole, self).__init__(
-            env_id, init_bound, terminal_time, 4, 1, 1e3
+            env_id, init_bound, terminal_time, 4, 1, 100
         )
         # Parameters specific to the cart-pole environment
-        self._mass_p, self._mass_c, self._l = .1, 1, .3
+        self._mass_p, self._mass_c, self._l = 1, 1, 1
         self._g, self._gear = -9.81, 1
         self._fr = np.array([0, .1]).reshape(2, 1)
-        self._Q = np.diag(np.array([25, 25, 0.5, .1]))
+        self._Q = np.diag(np.array([0, 0, 0, .0]))
+        self._Qf = np.diag(np.array([80, 600, 0.8, 4.5]))
         self._R = np.array([[0.5]])
         self._dt = .01
         self.retrun_state = return_state
         self.state = np.zeros(4)
 
     def _get_reward(self, state, u):
-        return -(state.T @ self._Q @ state + u.T @ self._reg @ u)
+        Q = self._Q
+        if self._iter >= self._terminal_time - 10:
+            Q = self._Qf
+
+        return -(state.T @ Q @ state + u.T @ self._reg @ u)
 
     def _enc_state(self):
         qc, qp, qdc, qdp = self.state

@@ -146,7 +146,88 @@ def exponential_smoothing(series, alpha):
     return smoothed_series
 
 
-if __name__ == "__main__":
-    # Test the function with the newly uploaded CSV file
-    save_phase_plane_from_variable_data("../data/CP_balancing_LYAP.csv")
+import torch
 
+from scipy.spatial import ConvexHull
+import matplotlib.pyplot as plt
+
+from scipy.spatial import ConvexHull
+import matplotlib.pyplot as plt
+
+from scipy.spatial import ConvexHull
+import matplotlib.pyplot as plt
+
+
+def plot_trajectories_on_level_sets(model, csv_file_path):
+    plt.figure(figsize=(7, 5))  # Adjust figure size to fit double-column IEEE paper
+
+    model.eval()
+
+    df = pd.read_csv(csv_file_path)
+    trajectories = df.values
+
+    time_tensor = torch.tensor(0.0)
+
+    x_range = np.linspace(-1.5, 1.5, 20)
+    y_range = np.linspace(-1.5, 1.5, 20)
+    X, Y = np.meshgrid(x_range, y_range)
+    Z = np.zeros_like(X)
+
+    for i, x in enumerate(x_range):
+        for j, y in enumerate(y_range):
+            state = torch.tensor((x, y)).float().to('cpu').unsqueeze(0)
+            Z[i, j] = model(time_tensor, state).item()
+
+    plt.contourf(X, Y, Z, levels=50, cmap='viridis')
+
+    safe_initial_conditions = []
+    legend_handles = []
+
+    for traj in trajectories:
+        x_vals = traj[:-1:2]
+        y_vals = traj[1:-1:2]
+        if traj[-1] == 0:
+            color = 'g'
+            safe_initial_conditions.append((x_vals[0], y_vals[0]))
+        else:
+            color = 'r'
+
+        plt.plot(x_vals, y_vals, color=color)
+        plt.scatter(x_vals[0], y_vals[0], color=color, s=5)  # Smaller bullet points at the starting point
+
+    legend_handles.extend([
+        plt.Line2D([0], [0], color='g', label=r'$\frac{dv(\mathbf{x}, t)}{dt} \leq -\ell(\mathbf{x}, t)$ trajectories'),
+        plt.Line2D([0], [0], color='r', label=r'$\frac{dv(\mathbf{x}, t)}{dt} \geq -\ell(\mathbf{x}, t)$ trajectories')
+    ])
+
+    if len(safe_initial_conditions) > 2:
+        hull = ConvexHull(safe_initial_conditions)
+        for simplex in hull.simplices:
+            plt.plot(hull.points[simplex, 0], hull.points[simplex, 1], "k-")
+
+    legend_handles.append(plt.Line2D([0], [0], color='k', label='Convex hull of satisfied initial conditions'))
+
+    plt.legend(handles=legend_handles, fontsize=8)
+
+    plt.xlabel(r'$q$', fontsize=10)
+    plt.ylabel(r'$\dot{q}$', fontsize=10)
+    plt.title('Double Integrator Trajectories on Lyapunov Level Sets', fontsize=10)
+    plt.tight_layout()
+    plt.savefig("high_quality_plot.png", dpi=300)  # Save figure in high quality
+    plt.show()
+
+# Example usage:
+# Define your neural network architecture in a class, let's say it's called MyLyapunovNN
+# model = MyLyapunovNN()
+# model.load_state_dict(torch.load('your_model_state_dict.pt'))
+# plot_trajectories_on_level_sets(model, 'your_trajectories.csv')
+
+
+# if __name__ == "__main__":
+#     # # Test the function with the newly uploaded CSV file
+#     # # save_phase_plane_from_variable_data("../data/CP_balancing_LYAP.csv")
+#     # from PSDNets import ICNN
+#     # import torch.functional as F
+#     # nn_value_func = ICNN([3, 64, 64, 1], F.softplus).to('cpu')
+#     # nn_value_func.load_state_dict(torch.load('DI_LYAP_m-fwd_d-1_s-0.005_seed4.pt'))
+#     # plot_trajectories_on_level_sets(nn_value_func, '../data/DI_balancing_traj4.csv')

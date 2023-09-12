@@ -13,7 +13,7 @@ args = parser.parse_args()
 seed = args.seed
 
 di_params = ModelParams(1, 1, 1, 2, 2)
-sim_params = SimulationParams(3, 2, 1, 1, 1, 1, 20, 400, 0.01)
+sim_params = SimulationParams(3, 2, 1, 1, 1, 1, 100, 400, 0.01)
 di = DoubleIntegrator(sim_params.nsim, di_params, device)
 max_iter, alpha, dt, discount, step, scale, mode = 100, .5, 0.01, 1, 0.005, 1, 'fwd'
 Q = torch.diag(torch.Tensor([10, .1])).repeat(sim_params.nsim, 1, 1).to(device)*1
@@ -179,11 +179,15 @@ if __name__ == "__main__":
         loss.backward()
         optimizer.step()
 
-        # if iteration % 10 == 0:
-        #     with torch.no_grad():
-        #         plot_2d_funcition(pos_arr, vel_arr, [X, Y], f_mat, nn_value_func, trace=traj, contour=True)
+        if iteration % 10 == 0:
+            with torch.no_grad():
+                plot_2d_funcition(pos_arr, vel_arr, [X, Y], f_mat, nn_value_func, trace=traj, contour=True)
 
-        # plt.pause(0.01)
+        plt.pause(0.01)
+
+        if iteration == max_iter-1:
+            from utilities.general_utils import save_trajectory_to_csv
+            save_trajectory_to_csv(traj.clone(), losses, f"data/DI_balancing_traj{seed}.csv", [0, 1])
 
         iteration += 1
         total_time_steps += sim_params.ntime

@@ -153,7 +153,7 @@ configurations = {
     'CP_BALANCE_PPO': {
         'model_type': CustomCartpoleBalance,
         'env_name': 'Custom Cartpole Balance PPO',
-        'epochs': 1500,
+        'epochs': 20,
         'terminal_time': 110,
         'nproc': 6,
         'hyperparameters': {
@@ -197,7 +197,7 @@ configurations = {
         'xml_path': './xmls/cartpole.xml',
         'model_type': CustomCartpoleBalance,
         'env_name': 'Custom Cartpole Balance SAC',
-        'epochs': 1500,
+        'epochs': 20,
         'terminal_time': 110,
         'nproc': 6,
         'hyperparameters': {

@@ -288,8 +288,8 @@ configurations = {
                 'activation_fn': nn.ReLU,
                 'ortho_init': False,
                 'net_arch': {
-                    'pi': [256, 256],
-                    'vf': [256, 256]
+                    'pi': [400, 300],
+                    'vf': [200, 300]
                 }
             },
             'sde_sample_freq': 4,

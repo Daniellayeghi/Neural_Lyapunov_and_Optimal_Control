@@ -168,8 +168,8 @@ def plot_trajectories_on_level_sets(model, csv_file_path):
 
     time_tensor = torch.tensor(0.0)
 
-    x_range = np.linspace(-1.5, 1.5, 20)
-    y_range = np.linspace(-1.5, 1.5, 20)
+    x_range = np.linspace(-1.25, 1.25, 20)
+    y_range = np.linspace(-1.25, 1.25, 20)
     X, Y = np.meshgrid(x_range, y_range)
     Z = np.zeros_like(X)
 
@@ -211,7 +211,8 @@ def plot_trajectories_on_level_sets(model, csv_file_path):
 
     plt.xlabel(r'$q$', fontsize=10)
     plt.ylabel(r'$\dot{q}$', fontsize=10)
-    plt.title('Double Integrator Trajectories on Lyapunov Level Sets', fontsize=10)
+    plt.title('Double Integrator Trajectories on Lyapunov Level Sets'
+              '', fontsize=10)
     plt.tight_layout()
     plt.savefig("high_quality_plot.png", dpi=300)  # Save figure in high quality
     plt.show()

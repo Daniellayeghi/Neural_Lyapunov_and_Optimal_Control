@@ -233,7 +233,7 @@ configurations = {
         'xml_path': './xmls/cartpole.xml',
         'model_type': CustomCartpole,
         'env_name': 'Custom Cartpole Swingup SAC',
-        'epochs': 980,
+        'epochs': 4333,
         'terminal_time': 171,
         'nproc': 6,
         'hyperparameters': {
@@ -269,7 +269,7 @@ configurations = {
         'xml_path': './xmls/cartpole.xml',
         'model_type': CustomCartpole,
         'env_name': 'Custom Cartpole Swingup PPO',
-        'epochs': 980,
+        'epochs': 4333,
         'terminal_time': 171,
         'nproc': 6,
         'hyperparameters': {

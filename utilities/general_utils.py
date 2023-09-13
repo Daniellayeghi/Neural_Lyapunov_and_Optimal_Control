@@ -58,7 +58,17 @@ def find_iteration_below_cost(main_csv_path, reference_csv_path):
     else:
         return int(below_target.iloc[0].name), target_cost, last_iteration_reference
 
-def get_final_cost_stats(csv_path):
+
+def get_final_cost_stats_ours(csv_path: str) -> tuple:
+    df = pd.read_csv(csv_path)
+    filtered_columns = [col for col in df.columns if 'MIN' not in col and 'MAX' not in col and col != 'Step']
+    last_row = df[filtered_columns].iloc[-1]
+    average_last_row = last_row.mean()
+    std_last_row = last_row.std()
+    return average_last_row, std_last_row
+
+
+def get_final_cost_stats_baseline(csv_path):
     data = pd.read_csv(csv_path)
     final_row = data.iloc[-1]
     final_avg_cost = final_row.mean()

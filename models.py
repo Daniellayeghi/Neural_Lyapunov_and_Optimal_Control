@@ -78,7 +78,6 @@ class BaseRBD(object):
     def simulate_REG(self, x, tau):
         q, qd = x[:, :, :self._params.nq].clone(), x[:, :, self._params.nq:].clone()
         Minv = torch.linalg.inv(self._Mfull(q))
-        tau = torch.cat((tau, torch.zeros_like(tau)), dim=2)
         Tp = self._Tbias(x)
         Tfric = self._Tfric(qd)
         B = self._Bvec()
@@ -89,10 +88,10 @@ class BaseRBD(object):
 
 class DoubleIntegrator(BaseRBD):
     MASS = 1
-    FRICTION = .1
+    FRICTION = 0
     GEAR = 1
 
-    def __init__(self, nsims, params: ModelParams, device, mode='inv'):
+    def __init__(self, nsims, params: ModelParams, device, mode='fwd'):
         super(DoubleIntegrator, self).__init__(nsims, params, device, mode)
         self._M = torch.ones((nsims, 1, 1)).to(device) * self.MASS
         self._b = torch.diag(torch.Tensor([1])).repeat(nsims, 1, 1).to(device)
@@ -263,10 +262,10 @@ class Cartpole(BaseRBD):
 
 
 class TwoLink2(BaseRBD):
-    FRICTION = 0.025
+    FRICTION = 0.25
     GEAR = 1
 
-    def __init__(self, nsims, params: ModelParams, device, mode='inv'):
+    def __init__(self, nsims, params: ModelParams, device, mode='fwd'):
         super(TwoLink2, self).__init__(nsims, params, device, mode)
         self._b = torch.diag(torch.Tensor([1, 1])).repeat(nsims, 1, 1).to(device)
 

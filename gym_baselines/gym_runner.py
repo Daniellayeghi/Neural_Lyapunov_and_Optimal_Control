@@ -68,6 +68,7 @@ def get_main_function(env, solver):
 
         path = _save_results(config['hyperparameters']['tensorboard_log'], config['env_name'], solver)
         name = f"./models/{env.upper()}_{solver.upper()}_{config['epochs']}"
+        model.policy.to("cpu")
         model.save(f"{name}")
         return path, name
 

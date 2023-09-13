@@ -18,12 +18,12 @@ wandb.init(project='TL_control', anonymous='allow')
 
 sim_params = SimulationParams(6, 4, 2, 2, 2, 1, 20, 290, 0.01)
 tl_params = ModelParams(2, 2, 1, 4, 4)
-max_iter, max_time, alpha, dt, discount, step, scale, mode = 51, 300, .5, 0.01, 1.0, 15, 1, 'fwd'
+max_iter, max_time, alpha, dt, discount, step, scale, mode = 61, 300, .5, 0.01, 1.0, 15, 1.5, 'fwd'
 Q = torch.diag(torch.Tensor([1, 1, 0, 0])).repeat(sim_params.nsim, 1, 1).to(device)
 R = torch.diag(torch.Tensor([1, 1])).repeat(sim_params.nsim, 1, 1).to(device)
-Qf = torch.diag(torch.Tensor([100, 100, 1, 1])).repeat(sim_params.nsim, 1, 1).to(device)
+Qf = torch.diag(torch.Tensor([500, 500, 5, 5])).repeat(sim_params.nsim, 1, 1).to(device)
 lambdas = torch.ones((sim_params.ntime-0, sim_params.nsim, 1, 1))
-tl = TwoLink2(sim_params.nsim, tl_params, device)
+tl = TwoLink2(sim_params.nsim, tl_params, device, mode='fwd')
 renderer = MjRenderer("./xmls/reacher.xml", dt=0.000001)
 
 def build_discounts(lambdas: torch.Tensor, discount: float):
@@ -149,7 +149,7 @@ def loss_function(x, xd, batch_time, alpha=1):
     l_terminal = 0 * torch.square(value_terminal_loss(x))
     return torch.mean(l_backup + l_terminal), l_backup + l_terminal, torch.mean(torch.sum((l_run_state + l_run_ctrl), dim=0)).squeeze()
 
-init_lr = 8e-2
+init_lr = 4e-3
 dyn_system = ProjectedDynamicalSystem(
     nn_value_func, loss_func, sim_params, encoder=state_encoder, dynamics=tl, mode=mode, step=step, scale=scale
 ).to(device)
@@ -165,7 +165,7 @@ total_time_steps = 0
 if __name__ == "__main__":
 
     def transform_coordinates_tl(traj: torch.Tensor):
-       traj[:, :, :, 1] = torch.pi - (traj[:, :, :, 0] + (torch.pi - traj[:, :, :, 1]))
+       traj[..., 1] = torch.pi - (traj[..., 0] + (torch.pi - traj[..., 1]))
        return traj
 
     def get_lr(optimizer):
@@ -182,7 +182,7 @@ if __name__ == "__main__":
         optimizer.zero_grad()
         x_init = x_init[torch.randperm(sim_params.nsim)[:], :, :].clone()
         traj, dtrj_dt = ctrl_odeint(dyn_system, x_init, time, method='euler', options=dict(step_size=dt))
-        loss, _, traj_loss = loss_function(traj, dtrj_dt, time_input, alpha)
+        loss, losses, traj_loss = loss_function(traj, dtrj_dt, time_input, alpha)
         loss.backward()
         sim_params.ntime, update = optimal_time(sim_params.ntime, max_time, dt, loss_function, x_init, dyn_system, loss)
         total_time_steps += sim_params.ntime
@@ -196,12 +196,11 @@ if __name__ == "__main__":
         wandb.log({'epoch': iteration+1, 'loss': loss.item(), 'traj_loss': traj_loss.item()})
 
         optimizer.step()
-        if iteration % 25 == 0:
-            for i in range(0, sim_params.nsim, 5):
-                selection = random.randint(0, sim_params.nsim - 1)
+        if iteration == max_iter-1:
+            _, indices = torch.topk(losses, 10, largest=False)
+            for i in indices:
                 traj_tl_mj = transform_coordinates_tl(traj.clone())
-                renderer.render(traj_tl_mj[:, selection, 0, :tl_params.nq].cpu().detach().numpy())
+                renderer.render(traj_tl_mj[:, i, 0, :tl_params.nq].cpu().detach().numpy())
 
         iteration += 1
-
     torch.save(dyn_system.value_func.to('cpu').state_dict(), f'{log}.pt')

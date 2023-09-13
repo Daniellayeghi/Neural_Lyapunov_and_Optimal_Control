@@ -1,5 +1,6 @@
-
+from time import sleep
 from models import DoubleIntegrator, ModelParams
+from utilities.mj_renderer import MjRenderer
 from neural_value_synthesis_diffeq import *
 import matplotlib.pyplot as plt
 from torchdiffeq_ctrl import odeint_adjoint as odeint
@@ -7,6 +8,7 @@ from utilities.mujoco_torch import SimulationParams
 from PSDNets import ICNN
 import wandb
 import argparse
+
 parser = argparse.ArgumentParser(description='Seed input')
 parser.add_argument('--seed', type=int, default=4, help='Random seed')
 args = parser.parse_args()
@@ -14,12 +16,13 @@ seed = args.seed
 
 di_params = ModelParams(1, 1, 1, 2, 2)
 sim_params = SimulationParams(3, 2, 1, 1, 1, 1, 100, 400, 0.01)
-di = DoubleIntegrator(sim_params.nsim, di_params, device)
 max_iter, alpha, dt, discount, step, scale, mode = 100, .5, 0.01, 1, 0.005, 1, 'fwd'
+di = DoubleIntegrator(sim_params.nsim, di_params, device=device, mode=mode)
 Q = torch.diag(torch.Tensor([10, .1])).repeat(sim_params.nsim, 1, 1).to(device)*1
 Qf = torch.diag(torch.Tensor([10, .1])).repeat(sim_params.nsim, 1, 1).to(device) * 10
 R = torch.diag(torch.Tensor([.1])).repeat(sim_params.nsim, 1, 1).to(device)
 lambdas = torch.ones((sim_params.ntime, sim_params.nsim, 1, 1))
+renderer = MjRenderer("./xmls/doubleintegrator.xml", 0.0001)
 
 torch.manual_seed(seed)
 
@@ -66,8 +69,6 @@ def state_encoder(x: torch.Tensor):
 
 def batch_state_encoder(x: torch.Tensor):
     return x
-
-
 
 
 def loss_func(x: torch.Tensor):
@@ -133,7 +134,6 @@ def loss_function(x, xd, batch_time, alpha=1):
     l_value_diff = value_diff_loss(x, batch_time)
     l_backup = torch.max((l_run_state + l_run_ctrl)*dt + l_value_diff, torch.zeros_like(l_value_diff))
     l_backup = torch.sum(l_backup, dim=0)
-    # print(f"constaints: \n {l_backup.squeeze()} \n {x_init.squeeze()}")
     l_terminal = 0 * torch.square(value_terminal_loss(x))
     return torch.mean(l_backup + l_terminal), l_backup + l_terminal, torch.mean(torch.sum((l_run_state + l_run_ctrl), dim=0)).squeeze()
 
@@ -174,7 +174,7 @@ if __name__ == "__main__":
         traj, dtraj_dt = odeint(dyn_system, x_init, time, method='euler', options=dict(step_size=dt))
         loss, losses, traj_loss = loss_function(traj, dtraj_dt, time_input, alpha)
 
-        print(f"Epochs: {iteration}, Loss: {loss.item()}, lr: {get_lr(optimizer)}, T: {sim_params.ntime}, Total time steps: {total_time_steps}\n")
+        print(f"Epochs: {iteration}, Loss: {loss.item()}, lr: {get_lr(optimizer)}, Total time steps: {total_time_steps}\n")
         wandb.log({'epoch': iteration+1, 'loss': loss.item(), 'traj_loss': traj_loss.item()})
         loss.backward()
         optimizer.step()
@@ -185,18 +185,12 @@ if __name__ == "__main__":
 
         plt.pause(0.01)
 
-        if iteration == max_iter-1:
-            from utilities.general_utils import save_trajectory_to_csv
-            save_trajectory_to_csv(traj.clone(), losses, f"data/DI_balancing_traj{seed}.csv", [0, 1])
+        if iteration == max_iter - 1:
+            _, indices = torch.topk(losses, 5, largest=False)
+            for i in indices:
+                renderer.render(traj[:, i, 0, :sim_params.nq].cpu().detach().numpy())
 
         iteration += 1
         total_time_steps += sim_params.ntime
-
-    plot_2d_funcition(pos_arr, vel_arr, [X, Y], f_mat, nn_value_func, trace=traj, contour=True)
-    plt.tick_params(labelsize=12)
-
-    # Save plot as high definition PNG
-    plt.savefig(f"{log}.png", dpi=300, bbox_inches='tight')
-    plt.show()
 
     torch.save(dyn_system.value_func.to('cpu').state_dict(), f'{log}.pt')  # Export to TorchScript

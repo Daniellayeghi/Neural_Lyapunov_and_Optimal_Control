@@ -23,7 +23,7 @@ cp_params = ModelParams(2, 2, 1, 4, 4)
 max_iter, max_time, alpha, dt, discount, step, scale, mode = 100, 146, .5, 0.008, 20, .005, 1, 'fwd'
 Q = torch.diag(torch.Tensor([0, 25, 0.5, .1])).repeat(sim_params.nsim, 1, 1).to(device)
 R = torch.diag(torch.Tensor([0.001])).repeat(sim_params.nsim, 1, 1).to(device)
-Qf = torch.diag(torch.Tensor([0, 100, 0.5, 1])).repeat(sim_params.nsim, 1, 1).to(device)
+Qf = torch.diag(torch.Tensor([0, 25, 0.5, 1])).repeat(sim_params.nsim, 1, 1).to(device)
 lambdas = torch.ones((sim_params.ntime-0, sim_params.nsim, 1, 1))
 cartpole = Cartpole(sim_params.nsim, cp_params, device, mode='fwd')
 renderer = MjRenderer("./xmls/cartpole.xml", 0.0001)
@@ -163,20 +163,15 @@ if __name__ == "__main__":
             time = torch.linspace(0, (sim_params.ntime - 1) * dt, sim_params.ntime).to(device).requires_grad_(True)
             time_input = time.clone().reshape(time.shape[0], 1, 1, 1).repeat(1, sim_params.nsim, 1, 1).requires_grad_(True)
 
-        print(f"Epochs: {iteration}, Loss: {loss.item()}, lr: {get_lr(optimizer)}, T: {sim_params.ntime}, Total time steps: {total_time_steps}, Update: {update}\n")
+        print(f"Epochs: {iteration}, Loss: {loss.item()}, lr: {get_lr(optimizer)}, Total time steps: {total_time_steps}\n")
         wandb.log({'epoch': iteration+1, 'loss': loss.item(), 'traj_loss': traj_loss.item()})
 
         optimizer.step()
 
-        if iteration % 15 == 0:
-            for i in range(0, sim_params.nsim, 20):
-                selection = random.randint(0, sim_params.nsim - 1)
-                renderer.render(traj[:, selection, 0, :sim_params.nq].cpu().detach().numpy())
-
         if iteration == max_iter-1:
-            from utilities.general_utils import save_trajectory_to_csv
-            save_trajectory_to_csv(traj.clone(), losses, f"data/CP_balancing_traj{seed}.csv", [1, 3])
-
+            _, indices = torch.topk(losses, 10, largest=False)
+            for i in indices:
+                renderer.render(traj[:, i, 0, :sim_params.nq].cpu().detach().numpy())
 
         iteration += 1
 

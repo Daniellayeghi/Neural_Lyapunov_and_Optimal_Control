@@ -18,11 +18,11 @@
     "default": {
         "absl-py": {
             "hashes": [
-                "sha256:0d3fe606adfa4f7db64792dd4c7aee4ee0c38ab75dfd353b7a83ed3e957fcb47",
-                "sha256:d2c244d01048ba476e7c080bd2c6df5e141d211de80223460d5b3b8a2a58433d"
+                "sha256:9a28abb62774ae4e8edbe2dd4c49ffcd45a6a848952a5eccc6a49f3f0fc1e2f3",
+                "sha256:d9690211c5fcfefcdd1a45470ac2b5c5acd45241c3af71eed96bc5441746c0d5"
             ],
-            "markers": "python_version >= '3.6'",
-            "version": "==1.4.0"
+            "markers": "python_version >= '3.7'",
+            "version": "==2.0.0"
         },
         "ale-py": {
             "hashes": [
@@ -324,11 +324,11 @@
         },
         "fasteners": {
             "hashes": [
-                "sha256:1d4caf5f8db57b0e4107d94fd5a1d02510a450dced6ca77d1839064c1bacf20c",
-                "sha256:cb7c13ef91e0c7e4fe4af38ecaf6b904ec3f5ce0dda06d34924b6b74b869d953"
+                "sha256:758819cb5d94cdedf4e836988b74de396ceacb8e2794d21f82d131fd9ee77237",
+                "sha256:b4f37c3ac52d8a445af3a66bce57b33b5e90b97c696b7b984f530cf8f0ded09c"
             ],
             "markers": "python_version >= '3.6'",
-            "version": "==0.18"
+            "version": "==0.19"
         },
         "fonttools": {
             "hashes": [
@@ -348,11 +348,11 @@
         },
         "gitpython": {
             "hashes": [
-                "sha256:9cbefbd1789a5fe9bcf621bb34d3f441f3a90c8461d377f84eda73e721d9b06b",
-                "sha256:c19b4292d7a1d3c0f653858db273ff8a6614100d1eb1528b014ec97286193c09"
+                "sha256:4bb0c2a6995e85064140d31a33289aa5dce80133a23d36fcd372d716c54d3ebf",
+                "sha256:8d22b5cfefd17c79914226982bb7851d6ade47545b1735a9d010a2a4c26d8388"
             ],
             "markers": "python_version >= '3.7'",
-            "version": "==3.1.35"
+            "version": "==3.1.36"
         },
         "glfw": {
             "hashes": [
@@ -370,11 +370,11 @@
         },
         "google-auth": {
             "hashes": [
-                "sha256:164cba9af4e6e4e40c3a4f90a1a6c12ee56f14c0b4868d1ca91b32826ab334ce",
-                "sha256:d61d1b40897407b574da67da1a833bdc10d5a11642566e506565d1b1a46ba873"
+                "sha256:2cec41407bd1e207f5b802638e32bb837df968bb5c05f413d0fa526fac4cf7a7",
+                "sha256:753a26312e6f1eaeec20bc6f2644a10926697da93446e1f8e24d6d32d45a922a"
             ],
-            "markers": "python_version >= '3.6'",
-            "version": "==2.22.0"
+            "markers": "python_version >= '3.7'",
+            "version": "==2.23.0"
         },
         "google-auth-oauthlib": {
             "hashes": [
@@ -1182,10 +1182,10 @@
         },
         "rich": {
             "hashes": [
-                "sha256:146a90b3b6b47cac4a73c12866a499e9817426423f57c5a66949c086191a8808",
-                "sha256:fb9d6c0a0f643c99eed3875b5377a184132ba9be4d61516a55273d3554d75a39"
+                "sha256:87b43e0543149efa1253f485cd845bb7ee54df16c9617b8a893650ab84b4acb6",
+                "sha256:9257b468badc3d347e146a4faa268ff229039d4c2d176ab0cffb4c4fbc73d5d9"
             ],
-            "version": "==13.5.2"
+            "version": "==13.5.3"
         },
         "rsa": {
             "hashes": [
@@ -1232,10 +1232,10 @@
         },
         "sentry-sdk": {
             "hashes": [
-                "sha256:2e53ad63f96bb9da6570ba2e755c267e529edcf58580a2c0d2a11ef26e1e678b",
-                "sha256:7dc873b87e1faf4d00614afd1058bfa1522942f33daef8a59f90de8ed75cd10c"
+                "sha256:64a7141005fb775b9db298a30de93e3b83e0ddd1232dc6f36eb38aebc1553291",
+                "sha256:6de2e88304873484207fed836388e422aeff000609b104c802749fd89d56ba5b"
             ],
-            "version": "==1.30.0"
+            "version": "==1.31.0"
         },
         "setproctitle": {
             "hashes": [
@@ -1335,11 +1335,11 @@
         },
         "smmap": {
             "hashes": [
-                "sha256:2aba19d6a040e78d8b09de5c57e96207b09ed71d8e55ce0959eeee6c8e190d94",
-                "sha256:c840e62059cd3be204b0c9c9f74be2c09d5648eddd4580d9314c3ecde0b30936"
+                "sha256:dceeb6c0028fdb6734471eb07c0cd2aae706ccaecab45965ee83f11c8d3b1f62",
+                "sha256:e6d8668fa5f93e706934a62d7b4db19c8d9eb8cf2adbb75ef1b675aa332b69da"
             ],
-            "markers": "python_version >= '3.6'",
-            "version": "==5.0.0"
+            "markers": "python_version >= '3.7'",
+            "version": "==5.0.1"
         },
         "stable-baselines3": {
             "extras": [
@@ -1402,7 +1402,7 @@
         },
         "torchdiffeq-ctrl": {
             "git": "https://github.com/Daniellayeghi/torchdiffeq_ctrl.git",
-            "ref": "0efb5a2afc47c2e45afb9c16d536571a6973bc24"
+            "ref": "85c03b5e6513d7ac5997ccc3e02d3bc54546afd1"
         },
         "tqdm": {
             "hashes": [

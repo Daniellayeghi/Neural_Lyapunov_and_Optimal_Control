@@ -51,7 +51,6 @@ def batch_state_encoder(x: torch.Tensor):
     qp = (torch.cos(qp) - 1)
     return torch.cat((qc, qp, v), 1).reshape((t, b, r, c))
 
-
 class NNValueFunction(nn.Module):
     def __init__(self, n_in):
         super(NNValueFunction, self).__init__()
@@ -154,7 +153,6 @@ dyn_system = ProjectedDynamicalSystem(
     encoder=state_encoder, dynamics=cartpole, mode=mode, step=step, scale=scale
 ).to(device)
 
-
 time = torch.linspace(0, (sim_params.ntime - 1) * dt, sim_params.ntime).to(device)
 time_input = time.clone().reshape(time.shape[0], 1, 1, 1).repeat(1, sim_params.nsim, 1, 1).requires_grad_(True)
 one_step = torch.linspace(0, dt, 2).to(device)
@@ -162,8 +160,6 @@ optimizer = torch.optim.AdamW(dyn_system.parameters(), lr=6e-3, amsgrad=True)
 
 from utilities.torch_utils import CustomLR
 custom_lr = CustomLR(optimizer=optimizer, halving_threshold=50, gamma=0.5)
-# lr = lr_scheduler.LambdaLR(optimizer, lr_lambda=custom_lr.lr_lambda)
-# lr = lr_scheduler.MultiStepLR(optimizer, milestones=[50, 60, 70, 80], gamma=0.5)
 lambdas = build_discounts(lambdas, discount).to(device)
 log = f"fwd_CP_TO_m-{mode}_d-{discount}_s-{step}_seed_{seed}"
 wandb.watch(dyn_system, loss_function, log="all")
@@ -187,7 +183,7 @@ if __name__ == "__main__":
 
     while iteration < max_iter:
         optimizer.zero_grad()
-        x_init = x_init[torch.randperm(sim_params.nsim)[:], :, :].clone()
+        x_init = x_init[torch.randperm(sim_params.nsim)[:]].clone()
         traj, dtraj_dt = odeint(dyn_system, x_init, time, method='euler', options=dict(step_size=dt))
         loss, losses, traj_loss = loss_function(traj, dtraj_dt, time_input, alpha)
         loss.backward()
@@ -197,18 +193,18 @@ if __name__ == "__main__":
             time = torch.linspace(0, (sim_params.ntime - 1) * dt, sim_params.ntime).to(device).requires_grad_(True)
             time_input = time.clone().reshape(time.shape[0], 1, 1, 1).repeat(1, sim_params.nsim, 1, 1).requires_grad_(True)
 
-        print(f"Epochs: {iteration}, Loss: {loss.item()}, lr: {get_lr(optimizer)}, T: {sim_params.ntime}, Total time steps: {total_time_steps}, Update: {update}\n")
+        print(f"Epochs: {iteration}, Loss: {loss.item()}, lr: {get_lr(optimizer)}, Total time steps: {total_time_steps}\n")
         wandb.log({'epoch': iteration+1, 'loss': loss.item(), 'traj_loss': traj_loss.item()})
 
         optimizer.step()
         custom_lr.step(loss.item())
         # lr.step(iteration)
 
-        if iteration % 20 == 0:
-            # indices = torch.randperm(sim_params.nsim-1 - 0)[:10]
+        if iteration == max_iter-1:
             _, indices = torch.topk(losses, 10, largest=False)
             for i in indices:
                 renderer.render(traj[:, i, 0, :sim_params.nq].cpu().detach().numpy())
+                sleep(1)
 
         iteration += 1
 

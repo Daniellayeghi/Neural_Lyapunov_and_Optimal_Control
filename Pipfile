@@ -9,11 +9,11 @@ recordtype = "*"
 wandb = "==0.14"
 protobuf = "==3.18"
 matplotlib = "==3.5.3"
-torchdiffeq-ctrl = {ref = "euler", git = "https://github.com/Daniellayeghi/torchdiffeq_ctrl.git"}
 stable-baselines3 = {extras = ["extra"], version = "*"}
 mujoco-py = "*"
 cython = "<3"
 scipy = "*"
+torchdiffeq-ctrl = {ref = "euler", git = "https://github.com/Daniellayeghi/torchdiffeq_ctrl.git"}
 
 [dev-packages]
 

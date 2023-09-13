@@ -60,9 +60,9 @@ class CustomEnv(gym.Env):
 
 class CustomDoubleIntegrator(CustomEnv):
     def __init__(self, env_id='custom_cp', init_bound=(-np.inf, np.inf), terminal_time=100):
-        super(CustomDoubleIntegrator, self).__init__(env_id, init_bound, terminal_time, 2, 1, 10)
+        super(CustomDoubleIntegrator, self).__init__(env_id, init_bound, terminal_time, 2, 1, 100)
 
-        self._friction = .1
+        self._friction = 0
         self._mass = 1
         self._gear = 1
         self._dt = 0.01
@@ -99,12 +99,12 @@ class CustomReacher(CustomEnv):
     def __init__(self, env_id, init_bound, terminal_time):
         super(CustomReacher, self).__init__(env_id, init_bound, terminal_time, 4, 2, 3)
 
-        self._friction = np.array([0.025, 0.025]).reshape(2, 1)
+        self._friction = np.array([0.25, 0.25]).reshape(2, 1)
         self._B = np.array([1, 1]).reshape(2, 1)
         self._gear = 0, 1
         self._dt = 0.01
         self._Q = np.diag(np.array([1, 1, 0, 0]))
-        self._Qf = np.diag(np.array([100, 100, 1, 1]))
+        self._Qf = np.diag(np.array([500, 500, 5, 5]))
         self._R = np.diag(np.array([1, 1]))
 
         def transform_func(traj: np.array):
@@ -114,13 +114,21 @@ class CustomReacher(CustomEnv):
         self.transform_func = transform_func
 
     def _get_reward(self, state, u):
+        q1, q2, _, _ = self.state
+        a1, a2, a3 = 0.025 + 0.045 + 1.4 * 0.3 ** 2, 0.3 * 0.16, 0.045
+        M11 = a1 + 2 * a2 * np.cos(q2)
+        M12 = a3 + a2 * np.cos(q2)
+        M22 = a3
+
+        M = np.array([M11, M12, M12, M22]).reshape(2, 2)
+        reg = np.linalg.inv(M) * 0.5
         Q = self._Q
         if self._iter >= self._terminal_time - 10:
             Q = self._Qf
 
-        return -1*(state.T @ Q @ state + u.T @ self._R @ u)
+        return -1*(state.T @ Q @ state + u.T @ reg @ u)
 
-    def _enc_state(self):
+    def _state_wrapped(self):
         q1, q2, qd1, qd2 = self.state
         enc = lambda x: np.arctan2(np.sin(x), np.cos(x))
         return np.array([enc(q1), enc(q2), qd1, qd2], dtype=np.float32)
@@ -148,18 +156,19 @@ class CustomReacher(CustomEnv):
         qdc_new = qd1 + qdd1 * self._dt
         qp_new = q2 + qd2 * self._dt
         qdp_new = qd2 + qdd2 * self._dt
-        self.reward = self._get_reward(self._enc_state(), u)
+        self.reward = self._get_reward(self._state_wrapped(), u)
         self.state = np.array([qc_new, qp_new, qdc_new, qdp_new]).flatten()
+        # self.state = self._state_wrapped()
         self._iter += 1
 
         terminate = self._terminated()
-        return self._enc_state(), self.reward, terminate, terminate, {}
+        return self.state, self.reward, terminate, terminate, {}
 
 
 class CustomCartpole(CustomEnv):
     def __init__(self, env_id, init_bound=(-np.inf, np.inf), terminal_time=100, return_state=False):
         super(CustomCartpole, self).__init__(
-            env_id, init_bound, terminal_time, 4, 1, 500
+            env_id, init_bound, terminal_time, 4, 1, 150
         )
         # Parameters specific to the cart-pole environment
         self._mass_p, self._mass_c, self._l = 1, 1, 1
@@ -167,7 +176,7 @@ class CustomCartpole(CustomEnv):
         self._fr = np.array([0, .1]).reshape(2, 1)
         self._Q = np.diag(np.array([0, 0, 0, .0]))
         self._Qf = np.diag(np.array([80, 600, 0.8, 4.5]))
-        self._R = np.array([[0.5]])/10
+        self._R = np.array([[1]])
         self._dt = .01
         self.retrun_state = return_state
         self.state = np.zeros(4)
@@ -179,9 +188,9 @@ class CustomCartpole(CustomEnv):
 
         return -(state.T @ Q @ state + u.T @ self._R @ u)
 
-    def _enc_state(self):
+    def _state_wrapped(self):
         qc, qp, qdc, qdp = self.state
-        enc = lambda x: (1 - np.cos(x)) / 2
+        enc = lambda x: (np.cos(x) - 1)
         return np.array([qc, enc(qp), qdc, qdp], dtype=np.float32)
 
     def _get_mass_matrix(self, state):
@@ -193,7 +202,6 @@ class CustomCartpole(CustomEnv):
     def step(self, u):
         # Something is wrong in the computing the effective torque on the pole here
         # limit force applied. Seems like at very high forces the behaviour is completely linear
-        
         qc, qp, qdc, qdp = self.state
         qd = np.array([qdc, qdp]).reshape(2, 1)
         m_p, m_c, g, gear, l = self._mass_p, self._mass_c, self._g, self._gear, self._l
@@ -209,14 +217,12 @@ class CustomCartpole(CustomEnv):
         qdc_new = qdc + qddc * self._dt
         qp_new = qp + qdp * self._dt
         qdp_new = qdp + qddp * self._dt
-        self.reward = self._get_reward(self._enc_state(), u)
+        self.reward = self._get_reward(self._state_wrapped(), u)
         self.state = np.array([qc_new, qp_new, qdc_new, qdp_new]).flatten()
+        # self.state = self._state_wrapped()
         self._iter += 1
 
         terminate = self._terminated()
-
-        # if terminate:
-        #     self.reward *= 1000
 
         return self.state, self.reward, terminate, terminate, {}
 
@@ -228,15 +234,15 @@ class CustomCartpole(CustomEnv):
 class CustomCartpoleBalance(CustomEnv):
     def __init__(self, env_id, init_bound=(-np.inf, np.inf), terminal_time=100, return_state=False):
         super(CustomCartpoleBalance, self).__init__(
-            env_id, init_bound, terminal_time, 4, 1, 30
+            env_id, init_bound, terminal_time, 4, 1, 60
         )
         # Parameters specific to the cart-pole environment
-        self._mass_p, self._mass_c, self._l = 1, .1, .3
+        self._mass_p, self._mass_c, self._l = .1, 1, .3
         self._g, self._gear = -9.81, 1
         self._fr = np.array([.1, .1]).reshape(2, 1)
         self._Q = np.diag(np.array([0, 25, 0.5, .1]))
-        self._Qf = np.diag(np.array([0, 100, 0.5, 1]))
-        self._R = np.array([[0.9]])
+        self._Qf = np.diag(np.array([0, 25, 0.5, 1]))
+        self._R = np.array([[.9]])
         self._dt = .01
         self.retrun_state = return_state
         self.state = np.zeros(4)
@@ -245,19 +251,26 @@ class CustomCartpoleBalance(CustomEnv):
         Q = self._Q
         if self._iter >= self._terminal_time - 4:
             Q = self._Qf
-
         return -(state.T @ Q @ state + u.T @ self._R @ u)
 
-    def _enc_state(self):
-        qc, qp, qdc, qdp = self.state
+    def _state_wrapped(self):
+        state_cp = self.state.copy()
+        qc, qp, qdc, qdp = state_cp
+        qp = qp % (2 * np.pi)
         enc = lambda x: np.pi ** 2 * np.sin(x)
-        return np.array([qc, enc(qp), qdc, qdp], dtype=np.float32)
+        if np.pi/2 < np.abs(qp) < 3/2*np.pi:
+            state_cp[1] = enc(np.pi/2)
+        else:
+            state_cp[1] = enc(state_cp[1])
+
+        return state_cp
 
     def _get_mass_matrix(self, state):
         qc, qp, qdc, qdp = self.state
         m_p, m_c, g, gear, l = self._mass_p, self._mass_c, self._g, self._gear, self._l
         M = np.array([m_p + m_c, m_p * l * np.cos(qp), m_p * l * np.cos(qp), m_p * l ** 2]).reshape(2, 2)
         return M
+
     def step(self, u):
         qc, qp, qdc, qdp = self.state
         qd = np.array([qdc, qdp]).reshape(2, 1)
@@ -274,14 +287,12 @@ class CustomCartpoleBalance(CustomEnv):
         qdc_new = qdc + qddc * self._dt
         qp_new = qp + qdp * self._dt
         qdp_new = qdp + qddp * self._dt
-        self.reward = self._get_reward(self._enc_state(), u)
+        self.reward = self._get_reward(self._state_wrapped(), u)
         self.state = np.array([qc_new, qp_new, qdc_new, qdp_new]).flatten()
+        # self.state = self._state_wrapped()
         self._iter += 1
 
         terminate = self._terminated()
-
-        # if terminate:
-        #     self.reward *= 1000
 
         return self.state, self.reward, terminate, terminate, {}
 

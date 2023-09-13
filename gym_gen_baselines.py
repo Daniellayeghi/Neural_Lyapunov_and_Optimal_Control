@@ -13,7 +13,7 @@ def wrapper(func, queue):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run reinforcement learning algorithms on specified environments.')
     parser.add_argument(
-        '--env', choices=['di', 'tl', 'cp_balance', 'cp_swingup'], default=['tl'], nargs='+', help='Environment(s) to run'
+        '--env', choices=['di', 'tl', 'cp_balance', 'cp_swingup'], default=['cp_swingup'], nargs='+', help='Environment(s) to run'
     )
     parser.add_argument(
         '--solver', choices=['ppo', 'sac'], default=['sac'], nargs='+', help='ppo and/or sac'
@@ -41,7 +41,6 @@ if __name__ == "__main__":
         result, model_path = queue.get()
         print("Generating plots")
         plot_reward_graph_multi(result, f"{env.upper()} {solver.upper()}")
-    #
-    # plt.show()
-    # plt.close(1)
+
+    plt.show()
 

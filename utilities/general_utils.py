@@ -21,8 +21,6 @@ def save_trajectory_to_csv(traj, loss, filename, state_elements=None):
 
 
 import pandas as pd
-
-
 # Update the function to include the value of the cost at the midpoints and the average final loss at the last iteration
 def analyze_chunk_gradients_with_cost(csv_path):
     data = pd.read_csv(csv_path)
@@ -53,11 +51,12 @@ def find_iteration_below_cost(main_csv_path, reference_csv_path):
     reference_data['mean_value'] = reference_data.mean(axis=1)
     target_cost = -reference_data.loc[len(reference_data) - 1, 'mean_value']
     below_target = main_data[main_data['mean_value'] < target_cost]
+    last_iteration_reference = len(reference_data) - 1
 
     if below_target.empty:
         return "No iteration found where the average cost is below the target cost.", target_cost
     else:
-        return int(below_target.iloc[0].name), target_cost
+        return int(below_target.iloc[0].name), target_cost, last_iteration_reference
 
 def get_final_cost_stats(csv_path):
     data = pd.read_csv(csv_path)

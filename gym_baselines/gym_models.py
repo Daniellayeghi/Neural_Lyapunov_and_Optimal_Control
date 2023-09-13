@@ -250,7 +250,7 @@ class CustomCartpoleBalance(CustomEnv):
 
     def _enc_state(self):
         qc, qp, qdc, qdp = self.state
-        enc = lambda x: (1 - np.cos(x)) / 2
+        enc = lambda x: np.pi ** 2 * np.sin(x)
         return np.array([qc, enc(qp), qdc, qdp], dtype=np.float32)
 
     def _get_mass_matrix(self, state):

@@ -235,7 +235,7 @@ class CustomCartpoleBalance(CustomEnv):
         self._g, self._gear = -9.81, 1
         self._fr = np.array([.1, .1]).reshape(2, 1)
         self._Q = np.diag(np.array([0, 25, 0.5, .1]))
-        self._Qf = np.diag(np.array([0, 25, 0.5, .1]))
+        self._Qf = np.diag(np.array([0, 100, 0.5, 1]))
         self._R = np.array([[0.9]])
         self._dt = .01
         self.retrun_state = return_state
@@ -259,9 +259,6 @@ class CustomCartpoleBalance(CustomEnv):
         M = np.array([m_p + m_c, m_p * l * np.cos(qp), m_p * l * np.cos(qp), m_p * l ** 2]).reshape(2, 2)
         return M
     def step(self, u):
-        # Something is wrong in the computing the effective torque on the pole here
-        # limit force applied. Seems like at very high forces the behaviour is completely linear
-
         qc, qp, qdc, qdp = self.state
         qd = np.array([qdc, qdp]).reshape(2, 1)
         m_p, m_c, g, gear, l = self._mass_p, self._mass_c, self._g, self._gear, self._l

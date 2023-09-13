@@ -23,7 +23,7 @@ cp_params = ModelParams(2, 2, 1, 4, 4)
 max_iter, max_time, alpha, dt, discount, step, scale, mode = 100, 146, .5, 0.008, 20, .005, 1, 'fwd'
 Q = torch.diag(torch.Tensor([0, 25, 0.5, .1])).repeat(sim_params.nsim, 1, 1).to(device)
 R = torch.diag(torch.Tensor([0.001])).repeat(sim_params.nsim, 1, 1).to(device)
-Qf = torch.diag(torch.Tensor([0, 25, 0.5, .1])).repeat(sim_params.nsim, 1, 1).to(device)
+Qf = torch.diag(torch.Tensor([0, 100, 0.5, 1])).repeat(sim_params.nsim, 1, 1).to(device)
 lambdas = torch.ones((sim_params.ntime-0, sim_params.nsim, 1, 1))
 cartpole = Cartpole(sim_params.nsim, cp_params, device, mode='fwd')
 renderer = MjRenderer("./xmls/cartpole.xml", 0.0001)

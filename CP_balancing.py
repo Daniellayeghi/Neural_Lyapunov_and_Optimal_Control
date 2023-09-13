@@ -16,7 +16,7 @@ args = parser.parse_args()
 seed = args.seed
 torch.manual_seed(seed)
 
-wandb.init(project='CP_balancing', anonymous="allow")
+wandb.init(project='CP_balancing_new', anonymous="allow")
 
 sim_params = SimulationParams(6, 4, 2, 2, 1, 1, 20, 100, 0.008)
 cp_params = ModelParams(2, 2, 1, 4, 4)

@@ -288,7 +288,7 @@ class CustomCartpoleBalance(CustomEnv):
 
         terminate = self._terminated()
 
-        return self.state, self.reward, terminate, terminate, {}
+        return self._state_wrapped(), self.reward, terminate, terminate, {}
 
     def _terminated(self):
         out_of_bounds = np.abs(self.state[1]) > 0.75

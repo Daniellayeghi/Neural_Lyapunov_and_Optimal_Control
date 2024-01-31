@@ -254,10 +254,9 @@ class CustomCartpoleBalance(CustomEnv):
         return -(state.T @ Q @ state + u.T @ self._R @ u)
 
     def _state_wrapped(self):
-        def _state_wrapped(self):
-            qc, qp, qdc, qdp = self.state
-            enc = lambda x: (np.cos(x) - 1)
-            return np.array([qc, enc(qp), qdc, qdp], dtype=np.float32)
+        qc, qp, qdc, qdp = self.state
+        enc = lambda x: (np.cos(x) - 1)
+        return np.array([qc, enc(qp), qdc, qdp], dtype=np.float32)
 
     def _get_mass_matrix(self, state):
         qc, qp, qdc, qdp = self.state

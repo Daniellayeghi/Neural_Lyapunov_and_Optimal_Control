@@ -162,7 +162,7 @@ class CustomReacher(CustomEnv):
         self._iter += 1
 
         terminate = self._terminated()
-        return self.state, self.reward, terminate, terminate, {}
+        return self._state_wrapped(), self.reward, terminate, terminate, {}
 
 
 class CustomCartpole(CustomEnv):
@@ -224,7 +224,7 @@ class CustomCartpole(CustomEnv):
 
         terminate = self._terminated()
 
-        return self.state, self.reward, terminate, terminate, {}
+        return self._state_wrapped(), self.reward, terminate, terminate, {}
 
     def _terminated(self):
         # out_of_bounds = np.abs(self.state[1]) > 0.75
@@ -240,8 +240,8 @@ class CustomCartpoleBalance(CustomEnv):
         self._mass_p, self._mass_c, self._l = .1, 1, .3
         self._g, self._gear = -9.81, 1
         self._fr = np.array([.1, .1]).reshape(2, 1)
-        self._Q = np.diag(np.array([0, 25, 0.5, .1]))
-        self._Qf = np.diag(np.array([0, 25, 0.5, 1]))
+        self._Q = np.diag(np.array([0, 25, 0.5, .1])) * 2.5
+        self._Qf = np.diag(np.array([0, 25, 0.5, 1])) * 2.5
         self._R = np.array([[.9]])
         self._dt = .01
         self.retrun_state = return_state
@@ -254,16 +254,10 @@ class CustomCartpoleBalance(CustomEnv):
         return -(state.T @ Q @ state + u.T @ self._R @ u)
 
     def _state_wrapped(self):
-        state_cp = self.state.copy()
-        qc, qp, qdc, qdp = state_cp
-        qp = qp % (2 * np.pi)
-        enc = lambda x: np.pi ** 2 * np.sin(x)
-        if np.pi/2 < np.abs(qp) < 3/2*np.pi:
-            state_cp[1] = enc(np.pi/2)
-        else:
-            state_cp[1] = enc(state_cp[1])
-
-        return state_cp
+        def _state_wrapped(self):
+            qc, qp, qdc, qdp = self.state
+            enc = lambda x: (np.cos(x) - 1)
+            return np.array([qc, enc(qp), qdc, qdp], dtype=np.float32)
 
     def _get_mass_matrix(self, state):
         qc, qp, qdc, qdp = self.state

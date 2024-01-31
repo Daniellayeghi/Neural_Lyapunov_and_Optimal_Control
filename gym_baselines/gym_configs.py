@@ -13,9 +13,9 @@ configurations = {
     'DI_PPO': {
         'model_type': CustomDoubleIntegrator,
         'env_name': 'Custom Double Integrator PPO',
-        'epochs': 417,
+        'epochs': 139,
         'terminal_time': 400,
-        'nproc': 6,
+        'nproc': 18,
         'hyperparameters': {
             'batch_size': 64,
             'clip_range': 0.4,  # Placeholder, since this uses a function
@@ -34,7 +34,6 @@ configurations = {
                 'net_arch': {
                     'pi': [64, 64],
                     'vf': [64, 64],
-                    'optimizer_class': torch.optim.Adam
                 }
             },
             'sde_sample_freq': 4,
@@ -57,11 +56,11 @@ configurations = {
     'DI_SAC': {
         'model_type': CustomDoubleIntegrator,
         'env_name': 'Custom Double Integrator SAC',
-        'epochs': 417,
+        'epochs': 139,
         'terminal_time': 400,
-        'nproc': 6,
+        'nproc': 18,
         'hyperparameters': {
-            'batch_size': 256,
+            'batch_size': 64,
             'buffer_size': 100000,
             'ent_coef': 'auto',
             'gamma': 0.98,
@@ -91,27 +90,25 @@ configurations = {
     'TL_PPO': {
         'model_type': CustomReacher,
         'env_name': 'Custom Reacher PPO',
-        'epochs': 300,
+        'epochs': 100,
         'terminal_time': 171,
-        'nproc': 6,
+        'nproc': 18,
         'hyperparameters': {
             'batch_size': 64,
             'clip_range': 0.4,  # Placeholder, since this uses a function
             'ent_coef': 0.0,
-            'gae_lambda': 0.9,
+            'gae_lambda': 0.95,
             'gamma': 0.99,
-            'learning_rate': 3e-05,
+            'learning_rate': 3e-4,
             'max_grad_norm': 0.5,
             'n_epochs': 20,
-            'n_steps': 512,
+            'n_steps': 1,
             'policy': 'MlpPolicy',
             'policy_kwargs': {
-                'log_std_init': -2.7,
-                'ortho_init': False,
                 'activation_fn': nn.ReLU,
                 'net_arch': {
-                    'pi': [256, 256],
-                    'vf': [256, 256]
+                    'pi': [128, 128],
+                    'vf': [128, 128]
                 }
             },
             'sde_sample_freq': 4,
@@ -134,24 +131,23 @@ configurations = {
     'TL_SAC': {
         'model_type':CustomReacher,
         'env_name': 'Custom Reacher SAC',
-        'epochs': 300,
+        'epochs': 100,
         'terminal_time': 171,
-        'nproc': 6,
+        'nproc': 18,
         'hyperparameters': {
-            'batch_size': 256,
-            'buffer_size': 300000,
+            'batch_size': 64,
+            'buffer_size': 3e5,
             'ent_coef': 'auto',
             'gamma': 0.98,
-            'gradient_steps': 64,
-            'learning_rate': 0.00073,
-            'learning_starts': 10000,
+            'gradient_steps': 1,
+            'learning_rate': 3e-4,
+            'learning_starts': 1,
             'policy': 'MlpPolicy',
             'policy_kwargs': {
-                'log_std_init': -3,
-                'net_arch': [400, 300]
+                'net_arch': [128, 128]
             },
             'tau': 0.02,
-            'train_freq': 64,
+            'train_freq': 1,
             'use_sde': True,
             'tensorboard_log': './sac_tensorboard_tl/',
             'verbose': 1
@@ -169,27 +165,25 @@ configurations = {
     'CP_BALANCE_PPO': {
         'model_type': CustomCartpoleBalance,
         'env_name': 'Custom Cartpole Balance PPO',
-        'epochs': 750,
+        'epochs': 80,
         'terminal_time': 110,
-        'nproc': 12,
+        'nproc': 18,
         'hyperparameters': {
             'batch_size': 64,
             'clip_range': 0.4,  # Placeholder, since this uses a function
             'ent_coef': 0.0,
-            'gae_lambda': 0.9,
+            'gae_lambda': 0.95,
             'gamma': 0.99,
-            'learning_rate': 3e-05,
+            'learning_rate': 3e-4,
             'max_grad_norm': 0.5,
             'n_epochs': 20,
-            'n_steps': 512,
+            'n_steps': 1,
             'policy': 'MlpPolicy',
             'policy_kwargs': {
-                'log_std_init': -2.7,
-                'ortho_init': False,
                 'activation_fn': nn.ReLU,
                 'net_arch': {
-                    'pi': [256, 256],
-                    'vf': [256, 256]
+                    'pi': [128, 128],
+                    'vf': [128, 128]
                 }
             },
             'sde_sample_freq': 4,
@@ -213,25 +207,23 @@ configurations = {
         'xml_path': './xmls/cartpole.xml',
         'model_type': CustomCartpoleBalance,
         'env_name': 'Custom Cartpole Balance SAC',
-        'epochs': 750,
+        'epochs': 80,
         'terminal_time': 110,
-        'nproc': 12,
+        'nproc': 18,
         'hyperparameters': {
-            'batch_size': 256,
-            'buffer_size': 300000,
+            'batch_size': 64,
+            'buffer_size': 1e6,
             'ent_coef': 'auto',
             'gamma': 0.98,
-            'gradient_steps': 64,
+            'gradient_steps': 1,
             'learning_rate': 0.00073,
-            'learning_starts': 10000,
+            'learning_starts': 1,
             'policy': 'MlpPolicy',
             'policy_kwargs': {
-                'log_std_init': -3,
-                'net_arch': [400, 300],
-                'optimizer_class': torch.optim.Adam
+                'net_arch': [128, 128],
             },
             'tau': 0.02,
-            'train_freq': 64,
+            'train_freq': 1,
             'use_sde': True,
             'tensorboard_log': './sac_tensorboard_cp_balance/',
             'verbose': 1
@@ -249,25 +241,24 @@ configurations = {
         'xml_path': './xmls/cartpole.xml',
         'model_type': CustomCartpole,
         'env_name': 'Custom Cartpole Swingup SAC',
-        'epochs': 4333,
+        'epochs': 1445,
         'terminal_time': 171,
-        'nproc': 6,
+        'nproc': 18,
         'hyperparameters': {
-            'batch_size': 256,
+            'batch_size': 64,
             'buffer_size': 300000,
             'ent_coef': 'auto',
             'gamma': 0.98,
-            'gradient_steps': 64,
-            'learning_rate': .00073,
-            'learning_starts': 10000,
+            'gradient_steps': 1,
+            'learning_rate': 3e-4,
+            'learning_starts': 1,
             'policy': 'MlpPolicy',
             'policy_kwargs': {
                 'activation_fn': nn.ReLU,
-                'log_std_init': -3,
-                'net_arch': [400, 300]
+                'net_arch': [128, 128]
             },
             'tau': 0.02,
-            'train_freq': 64,
+            'train_freq': 1,
             'use_sde': False,
             'tensorboard_log': './sac_tensorboard_cp_swingup/',
             'verbose': 1
@@ -285,27 +276,27 @@ configurations = {
         'xml_path': './xmls/cartpole.xml',
         'model_type': CustomCartpole,
         'env_name': 'Custom Cartpole Swingup PPO',
-        'epochs': 4333,
+        'epochs': 1445,
         'terminal_time': 171,
-        'nproc': 6,
+        'nproc': 18,
         'hyperparameters': {
-            'batch_size': 128,
+            'batch_size': 64,
             'clip_range': 0.4,  # Placeholder, since this uses a function
             'ent_coef': 0.0,
             'gae_lambda': 0.92,
             'gamma': 0.99,
-            'learning_rate': 3e-5,
+            'learning_rate': 3e-4,
             'max_grad_norm': 0.5,
             'n_epochs': 20,
-            'n_steps': 512,
+            'n_steps': 1,
             'policy': 'MlpPolicy',
             'policy_kwargs': {
                 'log_std_init': -2.7,
                 'activation_fn': nn.ReLU,
                 'ortho_init': False,
                 'net_arch': {
-                    'pi': [400, 300],
-                    'vf': [200, 300]
+                    'pi': [128, 128],
+                    'vf': [128, 128]
                 }
             },
             'sde_sample_freq': 4,

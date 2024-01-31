@@ -1,4 +1,4 @@
-# Implementation for Neural Lyapunov and Optimal Control
+# Neural Lyapunov and Optimal Control
 
 This repository uses `mujoco-py` and therefore requires mujoco binaries. The steps for installing and copying these binaries are mentioned in:
 [https://github.com/openai/mujoco-py](https://github.com/openai/mujoco-py)

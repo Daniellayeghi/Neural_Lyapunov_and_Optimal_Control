@@ -136,7 +136,7 @@ configurations = {
         'nproc': 18,
         'hyperparameters': {
             'batch_size': 256,
-            'buffer_size': 3e5,
+            'buffer_size': 300000,
             'ent_coef': 'auto',
             'gamma': 0.98,
             'gradient_steps': 1,
@@ -212,11 +212,11 @@ configurations = {
         'nproc': 18,
         'hyperparameters': {
             'batch_size': 256,
-            'buffer_size': 1e6,
+            'buffer_size': 1000000,
             'ent_coef': 'auto',
             'gamma': 0.98,
             'gradient_steps': 1,
-            'learning_rate': 0.00073,
+            'learning_rate': 3e-4,
             'learning_starts': 1,
             'policy': 'MlpPolicy',
             'policy_kwargs': {

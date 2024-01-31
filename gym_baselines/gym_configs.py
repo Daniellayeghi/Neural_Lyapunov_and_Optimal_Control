@@ -90,7 +90,7 @@ configurations = {
     'TL_PPO': {
         'model_type': CustomReacher,
         'env_name': 'Custom Reacher PPO',
-        'epochs': 100,
+        'epochs': 330,
         'terminal_time': 171,
         'nproc': 18,
         'hyperparameters': {
@@ -131,7 +131,7 @@ configurations = {
     'TL_SAC': {
         'model_type':CustomReacher,
         'env_name': 'Custom Reacher SAC',
-        'epochs': 100,
+        'epochs': 330,
         'terminal_time': 171,
         'nproc': 18,
         'hyperparameters': {
@@ -165,7 +165,7 @@ configurations = {
     'CP_BALANCE_PPO': {
         'model_type': CustomCartpoleBalance,
         'env_name': 'Custom Cartpole Balance PPO',
-        'epochs': 80,
+        'epochs': 550,
         'terminal_time': 110,
         'nproc': 18,
         'hyperparameters': {
@@ -207,7 +207,7 @@ configurations = {
         'xml_path': './xmls/cartpole.xml',
         'model_type': CustomCartpoleBalance,
         'env_name': 'Custom Cartpole Balance SAC',
-        'epochs': 80,
+        'epochs': 550,
         'terminal_time': 110,
         'nproc': 18,
         'hyperparameters': {

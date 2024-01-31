@@ -17,7 +17,7 @@ configurations = {
         'terminal_time': 400,
         'nproc': 18,
         'hyperparameters': {
-            'batch_size': 64,
+            'batch_size': 256,
             'clip_range': 0.4,  # Placeholder, since this uses a function
             'ent_coef': 0.0,
             'gae_lambda': 0.95,
@@ -60,7 +60,7 @@ configurations = {
         'terminal_time': 400,
         'nproc': 18,
         'hyperparameters': {
-            'batch_size': 64,
+            'batch_size': 256,
             'buffer_size': 100000,
             'ent_coef': 'auto',
             'gamma': 0.98,
@@ -94,7 +94,7 @@ configurations = {
         'terminal_time': 171,
         'nproc': 18,
         'hyperparameters': {
-            'batch_size': 64,
+            'batch_size': 256,
             'clip_range': 0.4,  # Placeholder, since this uses a function
             'ent_coef': 0.0,
             'gae_lambda': 0.95,
@@ -135,7 +135,7 @@ configurations = {
         'terminal_time': 171,
         'nproc': 18,
         'hyperparameters': {
-            'batch_size': 64,
+            'batch_size': 256,
             'buffer_size': 3e5,
             'ent_coef': 'auto',
             'gamma': 0.98,
@@ -169,7 +169,7 @@ configurations = {
         'terminal_time': 110,
         'nproc': 18,
         'hyperparameters': {
-            'batch_size': 64,
+            'batch_size': 256,
             'clip_range': 0.4,  # Placeholder, since this uses a function
             'ent_coef': 0.0,
             'gae_lambda': 0.95,
@@ -211,7 +211,7 @@ configurations = {
         'terminal_time': 110,
         'nproc': 18,
         'hyperparameters': {
-            'batch_size': 64,
+            'batch_size': 256,
             'buffer_size': 1e6,
             'ent_coef': 'auto',
             'gamma': 0.98,
@@ -245,7 +245,7 @@ configurations = {
         'terminal_time': 171,
         'nproc': 18,
         'hyperparameters': {
-            'batch_size': 64,
+            'batch_size': 256,
             'buffer_size': 300000,
             'ent_coef': 'auto',
             'gamma': 0.98,
@@ -280,7 +280,7 @@ configurations = {
         'terminal_time': 171,
         'nproc': 18,
         'hyperparameters': {
-            'batch_size': 64,
+            'batch_size': 256,
             'clip_range': 0.4,  # Placeholder, since this uses a function
             'ent_coef': 0.0,
             'gae_lambda': 0.92,

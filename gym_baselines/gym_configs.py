@@ -20,20 +20,21 @@ configurations = {
             'batch_size': 64,
             'clip_range': 0.4,  # Placeholder, since this uses a function
             'ent_coef': 0.0,
-            'gae_lambda': 0.9,
+            'gae_lambda': 0.95,
             'gamma': 0.99,
             'learning_rate': 3e-05,
             'max_grad_norm': 0.5,
             'n_epochs': 20,
-            'n_steps': 512,
+            'n_steps': 10,
             'policy': 'MlpPolicy',
             'policy_kwargs': {
-                'log_std_init': -2.7,
-                'ortho_init': False,
+                # 'log_std_init': -2.7,
+                # 'ortho_init': False,
                 'activation_fn': nn.ReLU,
                 'net_arch': {
                     'pi': [64, 64],
-                    'vf': [64, 64]
+                    'vf': [64, 64],
+                    'optimizer_class': torch.optim.Adam
                 }
             },
             'sde_sample_freq': 4,
@@ -61,19 +62,18 @@ configurations = {
         'nproc': 6,
         'hyperparameters': {
             'batch_size': 256,
-            'buffer_size': 300000,
+            'buffer_size': 100000,
             'ent_coef': 'auto',
             'gamma': 0.98,
-            'gradient_steps': 64,
-            'learning_rate': 0.00073,
-            'learning_starts': 10000,
+            'gradient_steps': 1,
+            'learning_rate': 3e-4,
+            'learning_starts': 0,
             'policy': 'MlpPolicy',
             'policy_kwargs': {
-                'log_std_init': -3,
-                'net_arch': [400, 300]
+                'net_arch': [64, 64]
             },
             'tau': 0.02,
-            'train_freq': 64,
+            'train_freq': 1,
             'use_sde': True,
             'tensorboard_log': './sac_tensorboard_di/',
             'verbose': 1
@@ -227,7 +227,8 @@ configurations = {
             'policy': 'MlpPolicy',
             'policy_kwargs': {
                 'log_std_init': -3,
-                'net_arch': [400, 300]
+                'net_arch': [400, 300],
+                'optimizer_class': torch.optim.Adam
             },
             'tau': 0.02,
             'train_freq': 64,

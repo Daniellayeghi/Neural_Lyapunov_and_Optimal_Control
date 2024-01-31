@@ -82,7 +82,7 @@ class CustomDoubleIntegrator(CustomEnv):
 
     def step(self, u):
         q, qd = self.state
-        qdd = (1 / self._mass * (u * self._gear - qd * self._friction))[0]
+        qdd = (1 / self._mass * (u * self._gear))[0]
 
         q_new = q + qd * self._dt
         qd_new = qd + qdd * self._dt

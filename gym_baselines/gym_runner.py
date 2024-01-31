@@ -45,7 +45,7 @@ def _run_learning_process(model, total_timesteps, eval_env, tb_name, eval_freq, 
 
 def _save_results(tb_name, env_name, algorithm):
     res = np.load(f"{tb_name}evaluations.npz")
-    rewards = res['results']
+    rewards = -res['results']
     path = f"./data/{env_name}_rewards_{algorithm}.csv"
     np.savetxt(path, rewards, delimiter=",")
     return path

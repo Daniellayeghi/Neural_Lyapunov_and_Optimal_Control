@@ -105,7 +105,7 @@ class CustomReacher(CustomEnv):
         self._dt = 0.01
         self._Q = np.diag(np.array([1, 1, 0, 0]))
         self._Qf = np.diag(np.array([500, 500, 5, 5]))
-        self._R = np.diag(np.array([1, 1]))
+        self._R = np.diag(np.array([.5, .5]))
 
         def transform_func(traj: np.array):
             traj[..., 1] = np.pi - (traj[..., 0] + (np.pi - traj[..., 1]))

@@ -190,7 +190,7 @@ configurations = {
             'use_sde': True,
             'vf_coef': 0.5,
             'normalize_advantage': True,
-            'tensorboard_log': './ppo_tensorboard_tl/',
+            'tensorboard_log': './ppo_tensorboard_balance/',
             'verbose': 1
         },
         'model_params': {
@@ -225,7 +225,7 @@ configurations = {
             'tau': 0.02,
             'train_freq': 1,
             'use_sde': True,
-            'tensorboard_log': './sac_tensorboard_cp_balance/',
+            'tensorboard_log': './sac_tensorboard_balance/',
             'verbose': 1
         },
         'model_params': {

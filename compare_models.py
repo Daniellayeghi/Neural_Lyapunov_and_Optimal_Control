@@ -8,7 +8,7 @@ torch.manual_seed(0)
 
 def __gym_func(u):
     res = gym_model.step(u)
-    obs = res[0]
+    obs = res[-1]
     obs.flatten()
 
 
@@ -34,7 +34,7 @@ def __simulate_gym(model, x, u):
     for t in range(u.shape[0]):
         action = u[t]
         res = model.step(action)
-        obs = res[0]
+        obs = res[-1]['state']
         res_traj.append(obs.flatten())
 
     return res_traj

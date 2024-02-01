@@ -17,7 +17,7 @@ class PolicyVisualizer:
         action, _ = self._model.predict(self._obs)
         res = self._env.step(action)
         reset = res[-2][0]
-        self._obs = res[0]
+        self._obs = res[-1]['state']
         pos_size = self._obs.flatten().shape[0] // 2
         return self._obs.flatten()[:pos_size], reset
 

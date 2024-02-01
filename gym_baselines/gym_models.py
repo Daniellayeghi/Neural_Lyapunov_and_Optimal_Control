@@ -92,7 +92,7 @@ class CustomDoubleIntegrator(CustomEnv):
 
         terminate = self._terminated()
 
-        return self.state, self.reward, terminate, terminate, {}
+        return self.state, self.reward, terminate, terminate, {'state': self.state}
 
 
 class CustomReacher(CustomEnv):
@@ -162,7 +162,7 @@ class CustomReacher(CustomEnv):
         self._iter += 1
 
         terminate = self._terminated()
-        return self._state_wrapped(), self.reward, terminate, terminate, {}
+        return self._state_wrapped(), self.reward, terminate, terminate, {'state': self.state}
 
 
 class CustomCartpole(CustomEnv):
@@ -224,7 +224,7 @@ class CustomCartpole(CustomEnv):
 
         terminate = self._terminated()
 
-        return self._state_wrapped(), self.reward, terminate, terminate, {}
+        return self._state_wrapped(), self.reward, terminate, terminate, {'state': self.state}
 
     def _terminated(self):
         # out_of_bounds = np.abs(self.state[1]) > 0.75
@@ -287,7 +287,7 @@ class CustomCartpoleBalance(CustomEnv):
 
         terminate = self._terminated()
 
-        return self._state_wrapped(), self.reward, terminate, terminate, {}
+        return self._state_wrapped(), self.reward, terminate, terminate, {'state': self.state}
 
     def _terminated(self):
         out_of_bounds = np.abs(self.state[1]) > 0.75

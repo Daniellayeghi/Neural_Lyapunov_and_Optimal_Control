@@ -16,7 +16,7 @@ if __name__ == "__main__":
         '--env', choices=['di', 'tl', 'cp_balance', 'cp_swingup'], default=['cp_balance'], nargs='+', help='Environment(s) to run'
     )
     parser.add_argument(
-        '--solver', choices=['ppo', 'sac'], default=['ppo'], nargs='+', help='ppo and/or sac'
+        '--solver', choices=['ppo', 'sac'], default=['sac'], nargs='+', help='ppo and/or sac'
     )
     args = parser.parse_args()
 

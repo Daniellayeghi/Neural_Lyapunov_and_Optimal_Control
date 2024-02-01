@@ -15,7 +15,7 @@ args = parser.parse_args()
 seed = args.seed
 
 di_params = ModelParams(1, 1, 1, 2, 2)
-sim_params = SimulationParams(3, 2, 1, 1, 1, 1, 100, 400, 0.01)
+sim_params = SimulationParams(3, 2, 1, 1, 1, 1, 12, 400, 0.01)
 max_iter, alpha, dt, discount, step, scale, mode = 100, .5, 0.01, 1, 0.005, 1, 'fwd'
 di = DoubleIntegrator(sim_params.nsim, di_params, device=device, mode=mode)
 Q = torch.diag(torch.Tensor([10, .1])).repeat(sim_params.nsim, 1, 1).to(device)*1
@@ -170,6 +170,10 @@ if __name__ == "__main__":
     iteration = 0
     traj = None
     while iteration < max_iter:
+        q_init = torch.FloatTensor(sim_params.nsim, 1, sim_params.nq).uniform_(-1, 1) * 1
+        qd_init = torch.FloatTensor(sim_params.nsim, 1, sim_params.nq).uniform_(-1, 1) * .7
+        x_init = torch.cat((q_init, qd_init), 2).to(device)
+
         optimizer.zero_grad()
         traj, dtraj_dt = odeint(dyn_system, x_init, time, method='euler', options=dict(step_size=dt))
         loss, losses, traj_loss = loss_function(traj, dtraj_dt, time_input, alpha)
@@ -179,7 +183,7 @@ if __name__ == "__main__":
         loss.backward()
         optimizer.step()
 
-        if iteration % 10 == 0:
+        if iteration == max_iter - 1:
             with torch.no_grad():
                 plot_2d_funcition(pos_arr, vel_arr, [X, Y], f_mat, nn_value_func, trace=traj, contour=True)
 

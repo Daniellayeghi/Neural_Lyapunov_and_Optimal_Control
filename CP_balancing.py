@@ -18,7 +18,7 @@ torch.manual_seed(seed)
 
 wandb.init(project='CP_balancing_new', anonymous="allow")
 
-sim_params = SimulationParams(6, 4, 2, 2, 1, 1, 20, 100, 0.008)
+sim_params = SimulationParams(6, 4, 2, 2, 1, 1, 12, 100, 0.008)
 cp_params = ModelParams(2, 2, 1, 4, 4)
 max_iter, max_time, alpha, dt, discount, step, scale, mode = 100, 146, .5, 0.008, 20, .005, 1, 'fwd'
 Q = torch.diag(torch.Tensor([0, 25, 0.5, .1])).repeat(sim_params.nsim, 1, 1).to(device)
@@ -153,6 +153,11 @@ if __name__ == "__main__":
     alpha = 0
 
     while iteration < max_iter:
+        qc_init = torch.FloatTensor(sim_params.nsim, 1, 1).uniform_(-2, 2) * 1
+        qp_init = torch.FloatTensor(sim_params.nsim, 1, 1).uniform_(-0.6, 0.6)
+        qd_init = torch.FloatTensor(sim_params.nsim, 1, sim_params.nv).uniform_(-0.2, 0.2)
+        x_init = torch.cat((qc_init, qp_init, qd_init), 2).to(device)
+
         optimizer.zero_grad()
         traj, dtraj_dt = odeint(dyn_system, x_init, time, method='euler', options=dict(step_size=dt))
         loss, losses, traj_loss = loss_function(traj, dtraj_dt, time_input, alpha)
@@ -163,6 +168,7 @@ if __name__ == "__main__":
             time = torch.linspace(0, (sim_params.ntime - 1) * dt, sim_params.ntime).to(device).requires_grad_(True)
             time_input = time.clone().reshape(time.shape[0], 1, 1, 1).repeat(1, sim_params.nsim, 1, 1).requires_grad_(True)
 
+        print(time[-1])
         print(f"Epochs: {iteration}, Loss: {loss.item()}, lr: {get_lr(optimizer)}, Total time steps: {total_time_steps}\n")
         wandb.log({'epoch': iteration+1, 'loss': loss.item(), 'traj_loss': traj_loss.item()})
 

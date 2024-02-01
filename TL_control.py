@@ -16,9 +16,9 @@ seed = args.seed
 torch.manual_seed(seed)
 wandb.init(project='TL_control', anonymous='allow')
 
-sim_params = SimulationParams(6, 4, 2, 2, 2, 1, 20, 290, 0.01)
+sim_params = SimulationParams(6, 4, 2, 2, 2, 1, 12, 160, 0.01)
 tl_params = ModelParams(2, 2, 1, 4, 4)
-max_iter, max_time, alpha, dt, discount, step, scale, mode = 61, 300, .5, 0.01, 1.0, 15, 1.5, 'fwd'
+max_iter, max_time, alpha, dt, discount, step, scale, mode = 61, 171, .5, 0.01, 1.0, 15, 1.5, 'fwd'
 Q = torch.diag(torch.Tensor([1, 1, 0, 0])).repeat(sim_params.nsim, 1, 1).to(device)
 R = torch.diag(torch.Tensor([1, 1])).repeat(sim_params.nsim, 1, 1).to(device)
 Qf = torch.diag(torch.Tensor([500, 500, 5, 5])).repeat(sim_params.nsim, 1, 1).to(device)
@@ -179,6 +179,10 @@ if __name__ == "__main__":
     alpha = 0
 
     while iteration < max_iter:
+        q_init = torch.FloatTensor(sim_params.nsim, 1, sim_params.nq).uniform_(-torch.pi, torch.pi)
+        qd_init = torch.FloatTensor(sim_params.nsim, 1, sim_params.nv).uniform_(-1, 1) * 0
+        x_init = torch.cat((q_init, qd_init), 2).to(device)
+
         optimizer.zero_grad()
         x_init = x_init[torch.randperm(sim_params.nsim)[:], :, :].clone()
         traj, dtrj_dt = ctrl_odeint(dyn_system, x_init, time, method='euler', options=dict(step_size=dt))
@@ -190,7 +194,7 @@ if __name__ == "__main__":
         if update:
             time = torch.linspace(0, (sim_params.ntime - 1) * dt, sim_params.ntime).to(device).requires_grad_(True)
             time_input = time.clone().reshape(time.shape[0], 1, 1, 1).repeat(1, sim_params.nsim, 1, 1).requires_grad_(True)
-
+        print(time[-1].item())
         print(f"Epochs: {iteration}, Loss: {loss.item()}, lr: {get_lr(optimizer)},"
               f" T: {sim_params.ntime}, Total time steps: {total_time_steps}, Update: {update}\n")
         wandb.log({'epoch': iteration+1, 'loss': loss.item(), 'traj_loss': traj_loss.item()})

@@ -101,7 +101,7 @@ class CustomDoubleIntegrator(CustomEnv):
 
 class CustomReacher(CustomEnv):
     def __init__(self, env_id, init_bound, terminal_time):
-        super(CustomReacher, self).__init__(env_id, init_bound, terminal_time, 4, 2, 3)
+        super(CustomReacher, self).__init__(env_id, init_bound, terminal_time, 4, 2, 150)
 
         self._friction = np.array([0.25, 0.25]).reshape(2, 1)
         self._B = np.array([1, 1]).reshape(2, 1)
@@ -177,7 +177,7 @@ class CustomReacher(CustomEnv):
 class CustomCartpole(CustomEnv):
     def __init__(self, env_id, init_bound=(-np.inf, np.inf), terminal_time=100, return_state=False):
         super(CustomCartpole, self).__init__(
-            env_id, init_bound, terminal_time, 4, 1, 150
+            env_id, init_bound, terminal_time, 4, 1, 200
         )
         # Parameters specific to the cart-pole environment
         self._mass_p, self._mass_c, self._l = 1, 1, 1
@@ -248,7 +248,7 @@ class CustomCartpole(CustomEnv):
 class CustomCartpoleBalance(CustomEnv):
     def __init__(self, env_id, init_bound=(-np.inf, np.inf), terminal_time=100, return_state=False):
         super(CustomCartpoleBalance, self).__init__(
-            env_id, init_bound, terminal_time, 4, 1, 60
+            env_id, init_bound, terminal_time, 4, 1, 200
         )
         # Parameters specific to the cart-pole environment
         self._mass_p, self._mass_c, self._l = .1, 1, .3

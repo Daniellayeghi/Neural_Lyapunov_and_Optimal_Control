@@ -37,7 +37,7 @@ def build_discounts(lambdas: torch.Tensor, discount: float):
 
 
 def atan2_encoder(x: torch.Tensor):
-    return torch.pi ** 2 * torch.sin(x)
+    return torch.pi ** 2 * torch.sin(x/2)
 
 
 def state_encoder(x: torch.Tensor):

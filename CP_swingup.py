@@ -51,7 +51,6 @@ def batch_state_encoder(x: torch.Tensor):
     qp = (torch.cos(qp) - 1)
     return torch.cat((qc, qp, v), 1).reshape((t, b, r, c))
 
-
 class NNValueFunction(nn.Module):
     def __init__(self, n_in):
         super(NNValueFunction, self).__init__()

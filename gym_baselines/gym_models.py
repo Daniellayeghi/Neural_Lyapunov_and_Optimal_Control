@@ -80,6 +80,10 @@ class CustomDoubleIntegrator(CustomEnv):
         q, qd = self.state
         return np.array([q, qd], dtype=np.float32)
 
+    def _decode(self, state):
+        q, qd = state
+        return np.array([q, qd], dtype=np.float32)
+
     def step(self, u):
         q, qd = self.state
         qdd = (1 / self._mass * (u * self._gear))[0]
@@ -130,6 +134,11 @@ class CustomReacher(CustomEnv):
 
     def _state_wrapped(self):
         q1, q2, qd1, qd2 = self.state
+        enc = lambda x: np.arctan2(np.sin(x), np.cos(x))
+        return np.array([enc(q1), enc(q2), qd1, qd2], dtype=np.float32)
+
+    def _decode(self, state):
+        q1, q2, qd1, qd2 = state
         enc = lambda x: np.arctan2(np.sin(x), np.cos(x))
         return np.array([enc(q1), enc(q2), qd1, qd2], dtype=np.float32)
 
@@ -191,6 +200,11 @@ class CustomCartpole(CustomEnv):
     def _state_wrapped(self):
         qc, qp, qdc, qdp = self.state
         enc = lambda x: (np.cos(x) - 1)
+        return np.array([qc, enc(qp), qdc, qdp], dtype=np.float32)
+
+    def _decode(self, state):
+        qc, qp, qdc, qdp = state
+        enc = lambda x: np.arccos(x + 1)
         return np.array([qc, enc(qp), qdc, qdp], dtype=np.float32)
 
     def _get_mass_matrix(self, state):
@@ -256,6 +270,11 @@ class CustomCartpoleBalance(CustomEnv):
     def _state_wrapped(self):
         qc, qp, qdc, qdp = self.state
         enc = lambda x: np.pi**2 * np.sin(x/2)
+        return np.array([qc, enc(qp), qdc, qdp], dtype=np.float32)
+
+    def _decode(self, state):
+        qc, qp, qdc, qdp = state
+        enc = lambda x: np.arcsin(x/np.pi**2) * 2
         return np.array([qc, enc(qp), qdc, qdp], dtype=np.float32)
 
     def _get_mass_matrix(self, state):

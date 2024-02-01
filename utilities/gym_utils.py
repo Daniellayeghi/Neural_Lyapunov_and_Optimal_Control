@@ -17,9 +17,10 @@ class PolicyVisualizer:
         action, _ = self._model.predict(self._obs)
         res = self._env.step(action)
         reset = res[-2][0]
-        self._obs = res[-1]['state']
-        pos_size = self._obs.flatten().shape[0] // 2
-        return self._obs.flatten()[:pos_size], reset
+        self._obs = res[0]
+        obs = self._env.envs[0]._decode(self._obs.flatten())
+        pos_size = obs.flatten().shape[0] // 2
+        return obs.flatten()[:pos_size], reset
 
     def visualize(self, horizon: int = 600) -> None:
         try:

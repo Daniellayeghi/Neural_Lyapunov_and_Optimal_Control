@@ -15,7 +15,7 @@ def plot_rewards_with_positive_variance(task_name, total_timesteps, sac_csv_path
     ppo_csv_path (str): The file path to the PPO rewards CSV.
     """
     # Load and process the datasets
-    sac_data = pd.read_csv(sac_csv_path).abs() / 100
+    sac_data = pd.read_csv(sac_csv_path).abs() /100
     ppo_data = pd.read_csv(ppo_csv_path).abs()
 
     # Compute mean and standard deviation for both SAC and PPO

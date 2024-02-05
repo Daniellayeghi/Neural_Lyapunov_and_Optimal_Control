@@ -31,7 +31,7 @@ def process_and_combine_csv_fixed_steps(zip_path, name):
                 data = pd.read_csv(file_path)
 
                 # Ignore 'Wall time' and directly use an incremental step value
-                data = data.assign(Step=range(len(data)))
+                # data = data.assign(Step=range(len(data)))
 
                 # Rename 'Value' column to include the file index for uniqueness
                 value_column_name = f'Value_{i + 1}'

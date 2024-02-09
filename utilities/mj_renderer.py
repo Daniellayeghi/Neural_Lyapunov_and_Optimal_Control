@@ -20,9 +20,21 @@ class MjRenderer:
         self.dt = dt
 
     def render(self, pos: np.array):
-        for t in range(pos.shape[0]):
+        shift = 1
+        for t in range(shift):
             state = self._set_state((pos[t]))
             mujoco_py.functions.mj_forward(self.model, self.data.data)
             self.data.set_state(state)
+            self.data.step()
             self.viewer.render()
             sleep(self.dt)
+
+        for t in range(pos.shape[0]-shift):
+            state = self._set_state((pos[t+shift]))
+            mujoco_py.functions.mj_forward(self.model, self.data.data)
+            self.data.set_state(state)
+            # self.data.step()
+            self.viewer.render()
+            sleep(self.dt)
+
+        sleep(1.0)

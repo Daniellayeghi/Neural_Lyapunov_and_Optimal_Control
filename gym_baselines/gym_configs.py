@@ -233,6 +233,7 @@ configurations = {
             'init_bound': {
                 'position': [(-2, 2), (-.6, .6)],  # bounds for joint 1, joint 2, joint 3
                 'velocity': [(0.2, 0.2), (0.2, 0.2)]  # bounds for joint 1, joint 2, joint 3
+                # bounds for joint 1, joint 2, joint 3
             },
             'terminal_time': 110
         }

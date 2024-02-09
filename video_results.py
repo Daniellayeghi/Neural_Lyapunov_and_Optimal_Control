@@ -13,7 +13,6 @@ def custom_sine(x, amp, base_period=2 * np.pi):
     return base_sine + additional_sine
 
 
-
 if __name__ == "__main__":
     # generate sinosoidal trajectory in control space between 0.1 and -0.1 for 1000 timesteps
     # make frequency an adjustable parameter
@@ -22,9 +21,9 @@ if __name__ == "__main__":
     arm2_scale = 0.1
     arm1_scale = 0.2
     freq = 8
-    timesteps = 1000
+    timesteps = 500
     time = np.linspace(0, 2 * np.pi * freq, timesteps)
-    us = np.array([custom_sine(x, arm1_scale_lf) for x in time])
+    us = np.array([custom_sine(x, arm2_scale_lf) for x in time])
     import matplotlib.pyplot as plt
     plt.plot(us)
     plt.show()
@@ -39,7 +38,7 @@ if __name__ == "__main__":
     )
 
     for u in us:
-        mj_sim.data.ctrl[0] = u
+        mj_sim.data.ctrl[1] = u
         mj_sim.forward()
         mj_sim.step()
         mj_viewer.render()
@@ -65,7 +64,7 @@ if __name__ == "__main__":
     # Set up the figure and axis
     fig, ax = plt.subplots(figsize=(10, 6))
     ax.set_xlim((0, 2 * np.pi * freq))
-    ax.set_ylim((-arm1_scale_lf*2 * 1.1, arm1_scale_lf*2 * 1.1))
+    ax.set_ylim((-arm2_scale_lf*2 * 1.1, arm2_scale_lf*2 * 1.1))
 
     # Customize plot background and grid
     ax.set_facecolor('#c6c6c6')  # Set the background color to grey

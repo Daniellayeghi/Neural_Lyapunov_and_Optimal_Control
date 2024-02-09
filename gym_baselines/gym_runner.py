@@ -3,7 +3,6 @@ import numpy as np
 import gymnasium as gym
 from stable_baselines3 import PPO, SAC
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
-from stable_baselines3.common.callbacks import EvalCallback
 from gym_baselines.gym_configs import configurations
 from utilities.gym_utils import VisualizePolicyCallback
 
@@ -29,12 +28,17 @@ def _setup_environment(env_name, nproc, model_params):
     return envs, eval_env
 
 
-def _initialize_model(algorithm, envs, hyperparameters):
+def _initialize_model(algorithm, envs, hyperparameters, model_path=None):
     if algorithm == "PPO":
-        model = PPO(**hyperparameters, env=envs)
+        if model_path is not None:
+            return PPO.load(model_path, env=envs)
+        else:
+            return PPO(**hyperparameters, env=envs)
     elif algorithm == "SAC":
-        model = SAC(**hyperparameters, env=envs)
-    return model
+        if model_path is not None:
+            return SAC.load(model_path, env=envs)
+        else:
+            return SAC(**hyperparameters, env=envs)
 
 
 def _run_learning_process(model, total_timesteps, eval_env, tb_name, eval_freq, xml_path):
@@ -68,7 +72,6 @@ def get_main_function(env, solver):
 
         path = _save_results(config['hyperparameters']['tensorboard_log'], config['env_name'], solver)
         name = f"./models/{env.upper()}_{solver.upper()}_{config['epochs']}"
-        model.policy.to("cpu")
         model.save(f"{name}")
         return path, name
 

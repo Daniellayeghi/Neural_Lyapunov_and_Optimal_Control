@@ -101,7 +101,7 @@ class CustomDoubleIntegrator(CustomEnv):
 
 class CustomReacher(CustomEnv):
     def __init__(self, env_id, init_bound, terminal_time):
-        super(CustomReacher, self).__init__(env_id, init_bound, terminal_time, 4, 2, 150)
+        super(CustomReacher, self).__init__(env_id, init_bound, terminal_time, 4, 2, 40)
 
         self._friction = np.array([0.25, 0.25]).reshape(2, 1)
         self._B = np.array([1, 1]).reshape(2, 1)

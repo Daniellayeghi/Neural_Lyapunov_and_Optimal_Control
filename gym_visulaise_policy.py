@@ -16,11 +16,11 @@ def generate_model_and_env(env, solver, model_path=None):
 
 def main():
     parser = argparse.ArgumentParser(description="Visualize a policy using a given model and environment type.")
-    parser.add_argument('--model_path', type=str, help="Path to the saved model.", required=False)
+    parser.add_argument('--model', type=str, help="Path to the saved model.", required=False)
     parser.add_argument('--env', choices=['di', 'tl', 'cp_balance', 'cp_swingup'], help='Environment(s) to run', required=False)
     parser.add_argument('--solver', choices=['ppo', 'sac'], default='sac', help='ppo and/or sac')
     args = parser.parse_args()
-    model, env, xml_path, terminal_time = generate_model_and_env(args.env, args.solver, args.model_path)
+    model, env, xml_path, terminal_time = generate_model_and_env(args.env, args.solver, args.model)
     print()
     #put model on cpu
     import torch

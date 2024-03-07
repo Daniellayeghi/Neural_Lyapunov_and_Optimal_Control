@@ -31,14 +31,14 @@ def _setup_environment(env_name, nproc, model_params):
 def _initialize_model(algorithm, envs, hyperparameters, model_path=None):
     if algorithm == "PPO":
         if model_path is not None:
-            return PPO.load(model_path, env=envs)
+            return PPO.load(model_path, env=envs, device='cpu')
         else:
-            return PPO(**hyperparameters, env=envs)
+            return PPO(**hyperparameters, env=envs, device='cpu')
     elif algorithm == "SAC":
         if model_path is not None:
-            return SAC.load(model_path, env=envs)
+            return SAC.load(model_path, env=envs, device='cpu')
         else:
-            return SAC(**hyperparameters, env=envs)
+            return SAC(**hyperparameters, env=envs, device='cpu')
 
 
 def _run_learning_process(model, total_timesteps, eval_env, tb_name, eval_freq, xml_path):

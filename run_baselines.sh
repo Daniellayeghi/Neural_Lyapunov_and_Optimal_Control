@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Check for two arguments
-if [ "$#" -ne 2 ]; then
+if [ "$#" -le 1 ]; then
     echo "Usage: $0 <env1> <env2>"
     exit 1
 fi
@@ -9,6 +9,8 @@ fi
 # Assign the environment names to variables
 ENV1=$1
 ENV2=$2
+ENV3=$3
+ENV4=$4
 
 # Function to run a task
 run_task() {
@@ -22,9 +24,13 @@ run_task() {
 for i in {1..4}; do
     # Alternate between environments and solvers
     run_task "$ENV1" "sac"
+    run_task "$ENV1" "ppo"
+    run_task "$ENV2" "sac"
     run_task "$ENV2" "ppo"
-    run_task "$ENV1" "sac"
-    run_task "$ENV2" "ppo"
+    run_task "$ENV3" "sac"
+    run_task "$ENV3" "ppo"
+    run_task "$ENV4" "sac"
+    run_task "$ENV4" "ppo"
 done
 
 echo "All tasks completed."

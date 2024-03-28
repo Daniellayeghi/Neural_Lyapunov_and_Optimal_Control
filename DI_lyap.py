@@ -129,7 +129,7 @@ def batch_inv_dynamics_loss(x, acc, alpha):
 
 def loss_function(x, xd, batch_time, alpha=1):
     x_running, acc_running = x[:-1].clone(), xd[:-1, ..., sim_params.nv:].clone()
-    l_run_ctrl = batch_inv_dynamics_loss(x_running, acc_running, alpha) *0
+    l_run_ctrl = batch_inv_dynamics_loss(x_running, acc_running, alpha) * 0
     l_run_state = batch_state_loss(x_running)
     l_value_diff = value_diff_loss(x, batch_time)
     l_backup = torch.max((l_run_state + l_run_ctrl)*dt + l_value_diff, torch.zeros_like(l_value_diff))

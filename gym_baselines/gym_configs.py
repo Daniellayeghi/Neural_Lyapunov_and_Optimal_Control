@@ -13,9 +13,9 @@ configurations = {
     'DI_PPO': {
         'model_type': CustomDoubleIntegrator,
         'env_name': 'Custom Double Integrator PPO',
-        'epochs': 100,
+        'epochs': 40,
         'terminal_time': 400,
-        'nproc': 12,
+        'nproc': 90,
         'hyperparameters': {
             'batch_size': 256,
             'clip_range': 0.4,  # Placeholder, since this uses a function
@@ -56,9 +56,9 @@ configurations = {
     'DI_SAC': {
         'model_type': CustomDoubleIntegrator,
         'env_name': 'Custom Double Integrator SAC',
-        'epochs': 100,
+        'epochs': 40,
         'terminal_time': 400,
-        'nproc': 12,
+        'nproc': 90,
         'hyperparameters': {
             'batch_size': 256,
             'buffer_size': 1000000,
@@ -90,9 +90,9 @@ configurations = {
     'TL_PPO': {
         'model_type': CustomReacher,
         'env_name': 'Custom Reacher PPO',
-        'epochs': 60,
+        'epochs': 80,
         'terminal_time': 170,
-        'nproc': 12,
+        'nproc': 90,
         'hyperparameters': {
             'batch_size': 256,
             'clip_range': 0.4,  # Placeholder, since this uses a function
@@ -131,9 +131,9 @@ configurations = {
     'TL_SAC': {
         'model_type':CustomReacher,
         'env_name': 'Custom Reacher SAC',
-        'epochs': 60,
+        'epochs': 80,
         'terminal_time': 170,
-        'nproc': 12,
+        'nproc': 90,
         'hyperparameters': {
             'batch_size': 256,
             'buffer_size': 300000,
@@ -165,9 +165,9 @@ configurations = {
     'CP_BALANCE_PPO': {
         'model_type': CustomCartpoleBalance,
         'env_name': 'Custom Cartpole Balance PPO',
-        'epochs': 100,
+        'epochs': 163,
         'terminal_time': 79,
-        'nproc': 12,
+        'nproc': 90,
         'hyperparameters': {
             'batch_size': 256,
             'clip_range': 0.4,  # Placeholder, since this uses a function
@@ -207,9 +207,9 @@ configurations = {
         'xml_path': './xmls/cartpole.xml',
         'model_type': CustomCartpoleBalance,
         'env_name': 'Custom Cartpole Balance SAC',
-        'epochs': 100,
+        'epochs': 163,
         'terminal_time': 79,
-        'nproc': 12,
+        'nproc': 90,
         'hyperparameters': {
             'batch_size': 256,
             'buffer_size': 1000000,
@@ -242,9 +242,9 @@ configurations = {
         'xml_path': './xmls/cartpole.xml',
         'model_type': CustomCartpole,
         'env_name': 'Custom Cartpole Swingup SAC',
-        'epochs': 130,
+        'epochs': 84,
         'terminal_time': 171,
-        'nproc': 12,
+        'nproc': 90,
         'hyperparameters': {
             'batch_size': 256,
             'buffer_size': 300000,
@@ -277,9 +277,9 @@ configurations = {
         'xml_path': './xmls/cartpole.xml',
         'model_type': CustomCartpole,
         'env_name': 'Custom Cartpole Swingup PPO',
-        'epochs': 130,
+        'epochs': 84,
         'terminal_time': 171,
-        'nproc': 12,
+        'nproc': 90,
         'hyperparameters': {
             'batch_size': 256,
             'clip_range': 0.4,  # Placeholder, since this uses a function

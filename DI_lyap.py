@@ -178,7 +178,7 @@ if __name__ == "__main__":
         traj, dtraj_dt = odeint(dyn_system, x_init, time, method='euler', options=dict(step_size=dt))
         loss, losses, traj_loss = loss_function(traj, dtraj_dt, time_input, alpha)
 
-        print(f"Epochs: {iteration}, Loss: {loss.item()}, lr: {get_lr(optimizer)}, Total time steps: {total_time_steps}\n")
+        print(f"Epochs: {iteration}, Loss: {loss.item()}, lr: {traj_loss.item()}, Total time steps: {total_time_steps}\n")
         wandb.log({'epoch': iteration+1, 'loss': loss.item(), 'traj_loss': traj_loss.item()})
         loss.backward()
         optimizer.step()

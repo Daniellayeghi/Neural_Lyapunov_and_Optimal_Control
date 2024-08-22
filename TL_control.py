@@ -1,4 +1,7 @@
 import random
+
+import torch
+
 from models import TwoLink2, ModelParams
 from neural_value_synthesis_diffeq import *
 from utilities.mujoco_torch import SimulationParams
@@ -14,11 +17,12 @@ args = parser.parse_args()
 seed = args.seed
 
 torch.manual_seed(seed)
+
 wandb.init(project='TL_control', anonymous='allow')
 
-sim_params = SimulationParams(6, 4, 2, 2, 2, 1, 12, 160, 0.01)
+sim_params = SimulationParams(6, 4, 2, 2, 2, 1, 12, 171, 0.01)
 tl_params = ModelParams(2, 2, 1, 4, 4)
-max_iter, max_time, alpha, dt, discount, step, scale, mode = 61, 171, .5, 0.01, 1.0, 15, 1.5, 'fwd'
+max_iter, max_time, alpha, dt, discount, step, scale, mode = 61, 174, .5, 0.01, 1.0, 15, 1.5, 'fwd'
 Q = torch.diag(torch.Tensor([1, 1, 0, 0])).repeat(sim_params.nsim, 1, 1).to(device)
 R = torch.diag(torch.Tensor([1, 1])).repeat(sim_params.nsim, 1, 1).to(device)
 Qf = torch.diag(torch.Tensor([500, 500, 5, 5])).repeat(sim_params.nsim, 1, 1).to(device)
@@ -172,19 +176,23 @@ if __name__ == "__main__":
         for param_group in optimizer.param_groups:
             return param_group['lr']
 
-    q_init = torch.FloatTensor(sim_params.nsim, 1, sim_params.nq).uniform_(-torch.pi, torch.pi)
+    torch.manual_seed(4)
+    q_init = torch.cat(
+        [torch.FloatTensor(sim_params.nsim, 1, 1).uniform_(-torch.pi, torch.pi).to(device),
+            torch.FloatTensor(sim_params.nsim, 1, 1).uniform_(-torch.pi, torch.pi).to(device)], -1
+    )
+
     qd_init = torch.FloatTensor(sim_params.nsim, 1, sim_params.nv).uniform_(-1, 1) * 0
     x_init = torch.cat((q_init, qd_init), 2).to(device)
     iteration = 0
     alpha = 0
 
     while iteration < max_iter:
-        q_init = torch.FloatTensor(sim_params.nsim, 1, sim_params.nq).uniform_(-torch.pi, torch.pi)
-        qd_init = torch.FloatTensor(sim_params.nsim, 1, sim_params.nv).uniform_(-1, 1) * 0
-        x_init = torch.cat((q_init, qd_init), 2).to(device)
+        # q_init = torch.FloatTensor(sim_params.nsim, 1, sim_params.nq).uniform_(-torch.pi, torch.pi)
+        # qd_init = torch.FloatTensor(sim_params.nsim, 1, sim_params.nv).uniform_(-1, 1) * 0
+        # x_init = torch.cat((q_init, qd_init), 2).to(device)
 
         optimizer.zero_grad()
-        x_init = x_init[torch.randperm(sim_params.nsim)[:], :, :].clone()
         traj, dtrj_dt = ctrl_odeint(dyn_system, x_init, time, method='euler', options=dict(step_size=dt))
         loss, losses, traj_loss = loss_function(traj, dtrj_dt, time_input, alpha)
         loss.backward()

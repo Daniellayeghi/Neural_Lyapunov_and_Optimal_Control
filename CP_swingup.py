@@ -22,7 +22,7 @@ cp_params = ModelParams(2, 2, 1, 4, 4)
 max_iter, max_time, alpha, dt, n_bins, discount, step, scale, mode = 130, 172, .5, 0.01, 3, 1, 15, 10, 'fwd'
 Q = torch.diag(torch.Tensor([.0, 0, .0, .0])).repeat(sim_params.nsim, 1, 1).to(device)
 R = torch.diag(torch.Tensor([0.0001])).repeat(sim_params.nsim, 1, 1).to(device)
-Qf = torch.diag(torch.Tensor([80, 600, .8, 4.5])).repeat(sim_params.nsim, 1, 1).to(device)
+Qf = torch.diag(torch.Tensor([80, 700/5, .8, 17])).repeat(sim_params.nsim, 1, 1).to(device)
 lambdas = torch.ones((25, sim_params.nsim, 1, 1))
 cartpole = Cartpole(sim_params.nsim, cp_params, mode='fwd', device=device)
 cartpole.GEAR = 1
@@ -37,10 +37,12 @@ def build_discounts(lambdas: torch.Tensor, discount: float):
     return lambdas.clone()
 
 def state_encoder(x: torch.Tensor):
+
     b, r, c = x.shape
     x = x.reshape((b, r*c))
     qc, qp, v = x[:, 0].clone().unsqueeze(1), x[:, 1].clone().unsqueeze(1), x[:, 2:].clone()
-    qp = (torch.cos(qp) - 1)
+    # encode to avoide wrap around modulo 2pi
+    qp = qp % (2 * torch.pi)
     return torch.cat((qc, qp, v), 1).reshape((b, r, c))
 
 
@@ -48,7 +50,7 @@ def batch_state_encoder(x: torch.Tensor):
     t, b, r, c = x.shape
     x = x.reshape((t*b, r*c))
     qc, qp, v = x[:, 0].clone().unsqueeze(1), x[:, 1].clone().unsqueeze(1), x[:, 2:].clone()
-    qp = (torch.cos(qp) - 1)
+    qp = qp % (2 * torch.pi)
     return torch.cat((qc, qp, v), 1).reshape((t, b, r, c))
 
 class NNValueFunction(nn.Module):

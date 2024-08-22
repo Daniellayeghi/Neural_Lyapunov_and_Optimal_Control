@@ -330,7 +330,7 @@ class TwoLink2(BaseRBD):
         return self.simulator(x, inputs)
 
 #
-# if __name__ == "__main__":
+if __name__ == "__main__":
 #     from mj_renderer import *
 #     # ren = MjRenderer('../xmls/double_cart_pole.xml')
 #     ren_tl = MjRenderer('../xmls/reacher.xml')
@@ -342,8 +342,8 @@ class TwoLink2(BaseRBD):
 #     dcp_params = ModelParams(3, 3, 1, 6, 6)
 #     dcp = DoubleCartpole(1, dcp_params, 'cpu', mode='inv')
 #
-#     tl_params = ModelParams(2, 2, 2, 4, 4)
-#     tl = TwoLink2(1, tl_params, 'cpu', mode='fwd')
+    tl_params = ModelParams(2, 2, 2, 4, 4)
+    tl = TwoLink2(1, tl_params, 'cpu', mode='fwd')
 #
 #     x_init_cp = torch.Tensor([0, 0.7, 0, 0]).view(1, 1, 4)
 #     qdd_init_cp = torch.Tensor([0, 0]).view(1, 1, 2)
@@ -353,21 +353,24 @@ class TwoLink2(BaseRBD):
 #     qdd_init_dcp = torch.Tensor([0, 0, 0]).view(1, 1, 3)
 #     traj_dcp = torch.zeros((500, 1, 1, dcp_params.nx))
 #
-#     x_init_tl = torch.Tensor([0, 0, 0, 0]).view(1, 1, 4)
-#     qdd_init_tl = torch.Tensor([0, 0]).view(1, 1, 2)
-#     traj_tl = torch.zeros((500, 1, 1, tl_params.nx))
+    x_init_tl = torch.Tensor([0, 0, 0, 0]).view(1, 1, 4)
+    qdd_init_tl = torch.Tensor([0, 0]).view(1, 1, 2)
+    traj_tl = torch.zeros((500, 1, 1, tl_params.nx))
 #     # test_acc = torch.from_numpy(np.load('test_acc.npy'))[:,:,:,0].reshape(200, 1, 1, 1)
 #
 #     K = torch.Tensor([-1.162, -2.269, 0, 0]).reshape(1, 4, 1)
 #
 #
-#     def integrate(func, x, xd, time, dt, res: torch.Tensor):
-#         for t in range(time):
-#             xd_new = func(x, torch.randn(1, 1, 2) * 0)
-#             x = x + xd_new * dt
-#             res[t] = x
-#
-#         return res
+
+    def integrate(func, x, xd, time, dt, res: torch.Tensor):
+        torch.manual_seed(4)
+        for t in range(time):
+            u = torch.randn(1, 1, 2)
+            xd_new = func(x, u)
+            x = x + xd_new * dt
+            res[t] = x
+
+        return res
 #
 #     #
 #     # def transform_coordinates_dcp(traj: torch.Tensor):
@@ -392,7 +395,7 @@ class TwoLink2(BaseRBD):
 #     #    traj[:, :, :, 1] = torch.pi - (traj[:, :, :, 0] + (torch.pi - traj[:, :, :, 1]))
 #     #    return traj
 #     #
-#     # traj_tl = integrate(tl, x_init_tl, qdd_init_tl, 500, 0.01, traj_tl)
+    traj_tl = integrate(tl, x_init_tl, qdd_init_tl, 500, 0.01, traj_tl)
 #     # traj_tl_mj = transform_coordinates_tl(traj_tl)
 #     # ren_tl.render(traj_tl_mj[:, 0, 0, :tl_params.nq].cpu().detach().numpy())
 #
